@@ -45,6 +45,18 @@ type __getRepoInput struct {
 // GetId returns __getRepoInput.Id, and is useful for accessing the field via an interface.
 func (v *__getRepoInput) GetId() uuid.UUID { return v.Id }
 
+// __updateProjectBranchInput is used internally by genqlient
+type __updateProjectBranchInput struct {
+	Id     uuid.UUID `json:"id"`
+	Branch string    `json:"branch"`
+}
+
+// GetId returns __updateProjectBranchInput.Id, and is useful for accessing the field via an interface.
+func (v *__updateProjectBranchInput) GetId() uuid.UUID { return v.Id }
+
+// GetBranch returns __updateProjectBranchInput.Branch, and is useful for accessing the field via an interface.
+func (v *__updateProjectBranchInput) GetBranch() string { return v.Branch }
+
 // duplicateProjectDuplicateProjectRepo includes the requested fields of the GraphQL type Repo.
 type duplicateProjectDuplicateProjectRepo struct {
 	// - v0.RepoID
@@ -122,6 +134,25 @@ type getRepoResponse struct {
 
 // GetRepo returns getRepoResponse.Repo, and is useful for accessing the field via an interface.
 func (v *getRepoResponse) GetRepo() getRepoRepo { return v.Repo }
+
+// updateProjectBranchResponse is returned by updateProjectBranch on success.
+type updateProjectBranchResponse struct {
+	UpdateProject updateProjectBranchUpdateProjectRepo `json:"updateProject"`
+}
+
+// GetUpdateProject returns updateProjectBranchResponse.UpdateProject, and is useful for accessing the field via an interface.
+func (v *updateProjectBranchResponse) GetUpdateProject() updateProjectBranchUpdateProjectRepo {
+	return v.UpdateProject
+}
+
+// updateProjectBranchUpdateProjectRepo includes the requested fields of the GraphQL type Repo.
+type updateProjectBranchUpdateProjectRepo struct {
+	// - v0.RepoID
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns updateProjectBranchUpdateProjectRepo.Id, and is useful for accessing the field via an interface.
+func (v *updateProjectBranchUpdateProjectRepo) GetId() uuid.UUID { return v.Id }
 
 // The query or mutation executed by duplicateProject.
 const duplicateProject_Operation = `
@@ -228,6 +259,43 @@ func getRepo(
 	var err error
 
 	var data getRepoResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by updateProjectBranch.
+const updateProjectBranch_Operation = `
+mutation updateProjectBranch ($id: ID!, $branch: String) {
+	updateProject(input: {id:$id,productionBranch:$branch}) {
+		id
+	}
+}
+`
+
+func updateProjectBranch(
+	ctx context.Context,
+	client graphql.Client,
+	id uuid.UUID,
+	branch string,
+) (*updateProjectBranchResponse, error) {
+	req := &graphql.Request{
+		OpName: "updateProjectBranch",
+		Query:  updateProjectBranch_Operation,
+		Variables: &__updateProjectBranchInput{
+			Id:     id,
+			Branch: branch,
+		},
+	}
+	var err error
+
+	var data updateProjectBranchResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

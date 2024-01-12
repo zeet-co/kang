@@ -30,15 +30,19 @@ func (c *Controller) StartEnvironment(envID, teamID uuid.UUID, opts StartEnviron
 	}
 
 	for i, id := range env.ProjectIDs {
-		//TODO opts.ProjectBranchOverrides
 		//TODO scale down resources on branch deployments (?)
 		//TODO handle database linking
 
 		newName := fmt.Sprintf("kang-%s_%d", subGroup, i)
-		if pID, err := c.zeet.DuplicateProject(context.Background(), id, groupID, subGroupID, newName); err != nil {
+		pID, err := c.zeet.DuplicateProject(context.Background(), id, groupID, subGroupID, newName)
+		if err != nil {
 			return errors.WithStack(err)
-		} else {
-			fmt.Println(pID)
+		}
+
+		if opts.ProjectBranchOverrides[id] != "" {
+			if err = c.zeet.UpdateProjectBranch(context.Background(), pID, opts.ProjectBranchOverrides[id]); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 

@@ -85,7 +85,7 @@ var startInstance = &cobra.Command{
 		}
 
 		inputID, _ := cmd.Flags().GetString("id")
-		overridesInput, _ := cmd.Flags().GetString("overrides")
+		overridesInput, _ := cmd.Flags().GetStringSlice("overrides")
 
 		envID, err := uuid.Parse(inputID)
 		if err != nil {
@@ -100,11 +100,10 @@ var startInstance = &cobra.Command{
 	},
 }
 
-func parseOverrides(input string) (output map[uuid.UUID]string) {
-	if input == "" {
-		return
-	}
-	pairs := strings.Split(input, ",")
+func parseOverrides(pairs []string) map[uuid.UUID]string {
+
+	output := make(map[uuid.UUID]string)
+
 	for _, pair := range pairs {
 		kv := strings.SplitN(pair, ":", 2)
 		if len(kv) == 2 {
@@ -115,7 +114,7 @@ func parseOverrides(input string) (output map[uuid.UUID]string) {
 			fmt.Println("Invalid key-value pair:", pair)
 		}
 	}
-	return
+	return output
 }
 
 func init() {

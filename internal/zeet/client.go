@@ -60,3 +60,7 @@ func (c *Client) EnsureGroupsExist(group, subgroup string, teamID uuid.UUID) (uu
 func (c *Client) DuplicateProject(ctx context.Context, projectID, groupID, subGroupID uuid.UUID, newName string) (uuid.UUID, error) {
 	return c.v0Client.DuplicateProject(ctx, projectID, groupID, subGroupID, newName)
 }
+
+func (c *Client) UpdateProjectBranch(ctx context.Context, projectID uuid.UUID, branch string) error {
+	return c.v0Client.UpdateProjectBranch(ctx, projectID, branch)
+}
