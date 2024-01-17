@@ -46,7 +46,5 @@ func (c *Controller) StartEnvironment(envID, teamID uuid.UUID, opts StartEnviron
 		}
 	}
 
-	// find or create the group / subGroup
-
 	return nil
 }

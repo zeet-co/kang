@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/zeet-co/kang/internal/config"
 
 	"github.com/zeet-co/kang/internal/controller"
 )
@@ -15,8 +16,13 @@ var createEnvCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create an Environment by mapping existing Zeet Projects together",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		apiKey, _ := cmd.Flags().GetString("api-key")
-		kang, err := controller.NewController(apiKey)
+
+		cfg, err := config.New(cmd)
+		if err != nil {
+			return err
+		}
+
+		kang, err := controller.NewController(cfg)
 		if err != nil {
 			return err
 		}
@@ -42,8 +48,8 @@ var createEnvCmd = &cobra.Command{
 		}
 
 		return kang.CreateEnvironment(controller.CreateEnvironmentOptions{
-			name,
-			validIDs,
+			Name:       name,
+			ProjectIDs: validIDs,
 		})
 	},
 }
@@ -52,8 +58,12 @@ var destroyEnvCmd = &cobra.Command{
 	Use:   "destroy",
 	Short: "Destroy a previously created Environment, preventing future instances from spawning",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		apiKey, _ := cmd.Flags().GetString("api-key")
-		kang, err := controller.NewController(apiKey)
+		cfg, err := config.New(cmd)
+		if err != nil {
+			return err
+		}
+
+		kang, err := controller.NewController(cfg)
 		if err != nil {
 			return err
 		}
@@ -73,13 +83,12 @@ var startInstance = &cobra.Command{
 	Use:   "start",
 	Short: "Start an instance of each Project in the Environment, using the specified Brnach overrides for any given Projects",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		apiKey, _ := cmd.Flags().GetString("api-key")
-		kang, err := controller.NewController(apiKey)
+		cfg, err := config.New(cmd)
 		if err != nil {
 			return err
 		}
 
-		teamID, err := getTeamID(cmd)
+		kang, err := controller.NewController(cfg)
 		if err != nil {
 			return err
 		}
@@ -94,7 +103,7 @@ var startInstance = &cobra.Command{
 
 		overrides := parseOverrides(overridesInput)
 
-		return kang.StartEnvironment(envID, teamID, controller.StartEnvironmentOpts{
+		return kang.StartEnvironment(envID, cfg.ZeetTeamID, controller.StartEnvironmentOpts{
 			ProjectBranchOverrides: overrides,
 		})
 	},
