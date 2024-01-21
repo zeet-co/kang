@@ -18,30 +18,30 @@ func (c *Controller) StartEnvironment(envID, teamID uuid.UUID, opts StartEnviron
 
 	err := c.db.DB.First(&env, envID).Error
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.WithStack(errors.Wrap(err, "could not find environment"))
 	}
 
-	group := "kang"
+	group := ZeetGroupName
 	subGroup := env.Name
 
 	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(group, subGroup, teamID)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.WithStack(errors.Wrap(err, "could not ensure group / subgroup"))
 	}
 
 	for i, id := range env.ProjectIDs {
 		//TODO scale down resources on branch deployments (?)
 		//TODO handle database linking
 
-		newName := fmt.Sprintf("kang-%s_%d", subGroup, i)
+		newName := fmt.Sprintf("kang-%s_%d", subGroup, i) //TODO make name {existingName}-kang
 		pID, err := c.zeet.DuplicateProject(context.Background(), id, groupID, subGroupID, newName)
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.WithStack(errors.Wrap(err, "could not duplicate project"))
 		}
 
 		if opts.ProjectBranchOverrides[id] != "" {
 			if err = c.zeet.UpdateProjectBranch(context.Background(), pID, opts.ProjectBranchOverrides[id]); err != nil {
-				return errors.WithStack(err)
+				return errors.WithStack(errors.Wrap(err, "could not apply branch override"))
 			}
 		}
 	}

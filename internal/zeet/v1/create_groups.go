@@ -2,12 +2,15 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 func (c *Client) CreateGroup(ctx context.Context, group string, teamID uuid.UUID) (uuid.UUID, error) {
+
+	fmt.Printf("Creating group %s\n", group)
 
 	_ = `# @genqlient
 
@@ -33,6 +36,8 @@ mutation createGroup(
 }
 
 func (c *Client) CreateSubGroup(ctx context.Context, subgroup string, groupID, teamID uuid.UUID) (uuid.UUID, error) {
+
+	fmt.Printf("Creating sub-group %s in group %s \n", subgroup, groupID)
 
 	_ = `# @genqlient
 

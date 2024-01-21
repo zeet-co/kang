@@ -9,6 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// __deleteRepoInput is used internally by genqlient
+type __deleteRepoInput struct {
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns __deleteRepoInput.Id, and is useful for accessing the field via an interface.
+func (v *__deleteRepoInput) GetId() uuid.UUID { return v.Id }
+
 // __duplicateProjectInput is used internally by genqlient
 type __duplicateProjectInput struct {
 	Id         uuid.UUID `json:"id"`
@@ -57,6 +65,14 @@ func (v *__updateProjectBranchInput) GetId() uuid.UUID { return v.Id }
 // GetBranch returns __updateProjectBranchInput.Branch, and is useful for accessing the field via an interface.
 func (v *__updateProjectBranchInput) GetBranch() string { return v.Branch }
 
+// deleteRepoResponse is returned by deleteRepo on success.
+type deleteRepoResponse struct {
+	DeleteRepo bool `json:"deleteRepo"`
+}
+
+// GetDeleteRepo returns deleteRepoResponse.DeleteRepo, and is useful for accessing the field via an interface.
+func (v *deleteRepoResponse) GetDeleteRepo() bool { return v.DeleteRepo }
+
 // duplicateProjectDuplicateProjectRepo includes the requested fields of the GraphQL type Repo.
 type duplicateProjectDuplicateProjectRepo struct {
 	// - v0.RepoID
@@ -99,8 +115,9 @@ func (v *getGroupProject) GetEnvironments() []getGroupProjectEnvironmentsProject
 // getGroupProjectEnvironmentsProjectEnvironment includes the requested fields of the GraphQL type ProjectEnvironment.
 type getGroupProjectEnvironmentsProjectEnvironment struct {
 	// - v0.EnvironmentID or v1.SubGroupID
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	Id    uuid.UUID                                                `json:"id"`
+	Name  string                                                   `json:"name"`
+	Repos []getGroupProjectEnvironmentsProjectEnvironmentReposRepo `json:"repos"`
 }
 
 // GetId returns getGroupProjectEnvironmentsProjectEnvironment.Id, and is useful for accessing the field via an interface.
@@ -108,6 +125,28 @@ func (v *getGroupProjectEnvironmentsProjectEnvironment) GetId() uuid.UUID { retu
 
 // GetName returns getGroupProjectEnvironmentsProjectEnvironment.Name, and is useful for accessing the field via an interface.
 func (v *getGroupProjectEnvironmentsProjectEnvironment) GetName() string { return v.Name }
+
+// GetRepos returns getGroupProjectEnvironmentsProjectEnvironment.Repos, and is useful for accessing the field via an interface.
+func (v *getGroupProjectEnvironmentsProjectEnvironment) GetRepos() []getGroupProjectEnvironmentsProjectEnvironmentReposRepo {
+	return v.Repos
+}
+
+// getGroupProjectEnvironmentsProjectEnvironmentReposRepo includes the requested fields of the GraphQL type Repo.
+type getGroupProjectEnvironmentsProjectEnvironmentReposRepo struct {
+	// - v0.RepoID
+	Id      uuid.UUID `json:"id"`
+	Enabled bool      `json:"enabled"`
+	Name    string    `json:"name"`
+}
+
+// GetId returns getGroupProjectEnvironmentsProjectEnvironmentReposRepo.Id, and is useful for accessing the field via an interface.
+func (v *getGroupProjectEnvironmentsProjectEnvironmentReposRepo) GetId() uuid.UUID { return v.Id }
+
+// GetEnabled returns getGroupProjectEnvironmentsProjectEnvironmentReposRepo.Enabled, and is useful for accessing the field via an interface.
+func (v *getGroupProjectEnvironmentsProjectEnvironmentReposRepo) GetEnabled() bool { return v.Enabled }
+
+// GetName returns getGroupProjectEnvironmentsProjectEnvironmentReposRepo.Name, and is useful for accessing the field via an interface.
+func (v *getGroupProjectEnvironmentsProjectEnvironmentReposRepo) GetName() string { return v.Name }
 
 // getGroupResponse is returned by getGroup on success.
 type getGroupResponse struct {
@@ -153,6 +192,39 @@ type updateProjectBranchUpdateProjectRepo struct {
 
 // GetId returns updateProjectBranchUpdateProjectRepo.Id, and is useful for accessing the field via an interface.
 func (v *updateProjectBranchUpdateProjectRepo) GetId() uuid.UUID { return v.Id }
+
+// The query or mutation executed by deleteRepo.
+const deleteRepo_Operation = `
+mutation deleteRepo ($id: ID!) {
+	deleteRepo(id: $id)
+}
+`
+
+func deleteRepo(
+	ctx context.Context,
+	client graphql.Client,
+	id uuid.UUID,
+) (*deleteRepoResponse, error) {
+	req := &graphql.Request{
+		OpName: "deleteRepo",
+		Query:  deleteRepo_Operation,
+		Variables: &__deleteRepoInput{
+			Id: id,
+		},
+	}
+	var err error
+
+	var data deleteRepoResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
 
 // The query or mutation executed by duplicateProject.
 const duplicateProject_Operation = `
@@ -204,6 +276,11 @@ query getGroup ($path: String) {
 		environments {
 			id
 			name
+			repos {
+				id
+				enabled
+				name
+			}
 		}
 	}
 }

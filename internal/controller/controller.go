@@ -7,6 +7,8 @@ import (
 	"github.com/zeet-co/kang/internal/zeet"
 )
 
+const ZeetGroupName = "kang"
+
 type Controller struct {
 	db   *storage.DB
 	zeet *zeet.Client

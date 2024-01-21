@@ -27,24 +27,37 @@ func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*v0.GetRepoResponse
 	return c.v0Client.GetRepo(ctx, id)
 }
 
+func (c *Client) GetGroup(ctx context.Context, group string) (*v0.GetSubGroupsForGroupResp, error) {
+	return c.v0Client.GetGroup(ctx, group)
+
+}
+
 func (c *Client) EnsureGroupsExist(group, subgroup string, teamID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
 
 	ctx := context.Background()
-
-	resp, err := c.v0Client.GetSubGroupsForGroup(ctx, group)
-	if err != nil {
-		//if not found, create
-		return uuid.Nil, uuid.Nil, err
-	}
-
-	groupID := resp.ID
+	groupID := uuid.Nil
 	subGroupID := uuid.Nil
 
-	for _, sg := range resp.SubGroups {
-		if sg.Name == subgroup {
-			subGroupID = sg.ID
-			break
+	resp, err := c.GetGroup(ctx, group)
+
+	if err == nil {
+		groupID = resp.ID
+
+		for _, sg := range resp.SubGroups {
+			if sg.Name == subgroup {
+				subGroupID = sg.ID
+				break
+			}
 		}
+
+	} else if err == v0.NotFoundError {
+		// create group
+		groupID, err = c.v1Client.CreateGroup(context.Background(), group, teamID)
+		if err != nil {
+			return uuid.Nil, uuid.Nil, err
+		}
+	} else {
+		return uuid.Nil, uuid.Nil, err
 	}
 
 	if subGroupID == uuid.Nil {
@@ -63,4 +76,8 @@ func (c *Client) DuplicateProject(ctx context.Context, projectID, groupID, subGr
 
 func (c *Client) UpdateProjectBranch(ctx context.Context, projectID uuid.UUID, branch string) error {
 	return c.v0Client.UpdateProjectBranch(ctx, projectID, branch)
+}
+
+func (c *Client) DeleteProject(ctx context.Context, id uuid.UUID) error {
+	return c.v0Client.DeleteProject(ctx, id)
 }

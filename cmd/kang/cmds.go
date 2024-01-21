@@ -79,7 +79,7 @@ var destroyEnvCmd = &cobra.Command{
 	},
 }
 
-var startInstance = &cobra.Command{
+var startEnvironmentCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start an instance of each Project in the Environment, using the specified Brnach overrides for any given Projects",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -109,6 +109,31 @@ var startInstance = &cobra.Command{
 	},
 }
 
+var stopEnvironmentCmd = &cobra.Command{
+	Use:   "stop",
+	Short: "Stop all running instances of each Project in the Environment",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.New(cmd)
+		if err != nil {
+			return err
+		}
+
+		kang, err := controller.NewController(cfg)
+		if err != nil {
+			return err
+		}
+
+		inputID, _ := cmd.Flags().GetString("id")
+
+		envID, err := uuid.Parse(inputID)
+		if err != nil {
+			return err
+		}
+
+		return kang.StopEnvironment(envID)
+	},
+}
+
 func parseOverrides(pairs []string) map[uuid.UUID]string {
 
 	output := make(map[uuid.UUID]string)
@@ -132,10 +157,14 @@ func init() {
 	createEnvCmd.Flags().StringSlice("ids", []string{}, "Specify a comma-seperated list of Zeet Project IDs")
 	createEnvCmd.MarkFlagRequired("ids")
 
+	//TODO support name instead of ID for destroy, stop, start
 	destroyEnvCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to destroy")
 	destroyEnvCmd.MarkFlagRequired("id")
 
-	startInstance.Flags().String("id", "", "Specify the ID of the environment you'd like to create an instance of")
-	startInstance.MarkFlagRequired("id")
-	startInstance.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : Branch combos that you would like to override from the normal Production Branch of each Project. Format: project_id:branch,proj..")
+	stopEnvironmentCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to stop")
+	stopEnvironmentCmd.MarkFlagRequired("id")
+
+	startEnvironmentCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to create an instance of")
+	startEnvironmentCmd.MarkFlagRequired("id")
+	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : Branch combos that you would like to override from the normal Production Branch of each Project. Format: project_id:branch,proj..")
 }

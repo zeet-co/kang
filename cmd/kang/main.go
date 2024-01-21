@@ -12,7 +12,8 @@ var rootCmd = &cobra.Command{Use: "kang", Short: "CLI to manage multi-Project PR
 func init() {
 	rootCmd.AddCommand(createEnvCmd)
 	rootCmd.AddCommand(destroyEnvCmd)
-	rootCmd.AddCommand(startInstance)
+	rootCmd.AddCommand(startEnvironmentCmd)
+	rootCmd.AddCommand(stopEnvironmentCmd)
 }
 
 func main() {

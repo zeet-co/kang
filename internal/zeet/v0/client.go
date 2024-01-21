@@ -1,11 +1,14 @@
 package v0
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Khan/genqlient/graphql"
 	"k8s.io/client-go/transport"
 )
+
+var NotFoundError error = fmt.Errorf("not found")
 
 type Client struct {
 	gql  graphql.Client
