@@ -160,11 +160,15 @@ func (v *getGroupResponse) GetProject() getGroupProject { return v.Project }
 // getRepoRepo includes the requested fields of the GraphQL type Repo.
 type getRepoRepo struct {
 	// - v0.RepoID
-	Id uuid.UUID `json:"id"`
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 // GetId returns getRepoRepo.Id, and is useful for accessing the field via an interface.
 func (v *getRepoRepo) GetId() uuid.UUID { return v.Id }
+
+// GetName returns getRepoRepo.Name, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetName() string { return v.Name }
 
 // getRepoResponse is returned by getRepo on success.
 type getRepoResponse struct {
@@ -317,6 +321,7 @@ const getRepo_Operation = `
 query getRepo ($id: UUID) {
 	repo(id: $id) {
 		id
+		name
 	}
 }
 `

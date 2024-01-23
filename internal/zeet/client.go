@@ -23,7 +23,7 @@ func New(token string) *Client {
 	}
 }
 
-func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*v0.GetRepoResponse, error) {
+func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*v0.Repo, error) {
 	return c.v0Client.GetRepo(ctx, id)
 }
 

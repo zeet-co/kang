@@ -7,17 +7,19 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-type GetRepoResponse struct {
-	ID uuid.UUID
+type Repo struct {
+	ID   uuid.UUID
+	Name string
 }
 
-func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*GetRepoResponse, error) {
-	out := &GetRepoResponse{}
+func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*Repo, error) {
+	out := &Repo{}
 
 	_ = `# @genqlient
 query getRepo($id: UUID) {
   repo(id: $id) {
     id
+		name
   }
 }
 `
