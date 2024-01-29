@@ -12,11 +12,10 @@ import (
 	"github.com/zeet-co/kang/internal/controller"
 )
 
-var createEnvCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create an Environment by mapping existing Zeet Projects together",
+var startEnvironmentCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start an instance of each Project in the Environment, using the specified Brnach overrides for any given Projects",
 	RunE: func(cmd *cobra.Command, args []string) error {
-
 		cfg, err := config.New(cmd)
 		if err != nil {
 			return err
@@ -27,8 +26,9 @@ var createEnvCmd = &cobra.Command{
 			return err
 		}
 
-		name, _ := cmd.Flags().GetString("name")
+		overridesInput, _ := cmd.Flags().GetStringSlice("overrides")
 		projectIDs, _ := cmd.Flags().GetStringSlice("ids")
+		envName, _ := cmd.Flags().GetString("name")
 
 		dedupedIDs := map[uuid.UUID]interface{}{}
 
@@ -44,67 +44,16 @@ var createEnvCmd = &cobra.Command{
 		}
 
 		if len(validIDs) < 2 {
-			return errors.New("Must specify at least 2 unique valid UUIDs")
-		}
-
-		return kang.CreateEnvironment(controller.CreateEnvironmentOptions{
-			Name:       name,
-			ProjectIDs: validIDs,
-		})
-	},
-}
-
-var destroyEnvCmd = &cobra.Command{
-	Use:   "destroy",
-	Short: "Destroy a previously created Environment, preventing future instances from spawning",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.New(cmd)
-		if err != nil {
-			return err
-		}
-
-		kang, err := controller.NewController(cfg)
-		if err != nil {
-			return err
-		}
-
-		inputID, _ := cmd.Flags().GetString("id")
-
-		envID, err := uuid.Parse(inputID)
-		if err != nil {
-			return err
-		}
-
-		return kang.DestroyEnvironment(envID)
-	},
-}
-
-var startEnvironmentCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start an instance of each Project in the Environment, using the specified Brnach overrides for any given Projects",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.New(cmd)
-		if err != nil {
-			return err
-		}
-
-		kang, err := controller.NewController(cfg)
-		if err != nil {
-			return err
-		}
-
-		inputID, _ := cmd.Flags().GetString("id")
-		overridesInput, _ := cmd.Flags().GetStringSlice("overrides")
-
-		envID, err := uuid.Parse(inputID)
-		if err != nil {
-			return err
+			return errors.New("Must specify at least 2 unique valid Project IDs")
 		}
 
 		overrides := parseOverrides(overridesInput)
 
-		return kang.StartEnvironment(envID, cfg.ZeetTeamID, controller.StartEnvironmentOpts{
+		return kang.StartEnvironment(controller.StartEnvironmentOpts{
+			TeamID:                 cfg.ZeetTeamID,
 			ProjectBranchOverrides: overrides,
+			EnvName:                envName,
+			ProjectIDs:             validIDs,
 		})
 	},
 }
@@ -123,14 +72,13 @@ var stopEnvironmentCmd = &cobra.Command{
 			return err
 		}
 
-		inputID, _ := cmd.Flags().GetString("id")
+		envName, err := cmd.Flags().GetString("name")
 
-		envID, err := uuid.Parse(inputID)
 		if err != nil {
 			return err
 		}
 
-		return kang.StopEnvironment(envID)
+		return kang.StopEnvironment(envName)
 	},
 }
 
@@ -152,19 +100,14 @@ func parseOverrides(pairs []string) map[uuid.UUID]string {
 }
 
 func init() {
-	createEnvCmd.Flags().String("name", "", "Specify a name for your new environment")
-	createEnvCmd.MarkFlagRequired("name")
-	createEnvCmd.Flags().StringSlice("ids", []string{}, "Specify a comma-seperated list of Zeet Project IDs")
-	createEnvCmd.MarkFlagRequired("ids")
+	stopEnvironmentCmd.Flags().String("name", "", "Specify the name of the environment you'd like to stop")
+	stopEnvironmentCmd.MarkFlagRequired("name")
 
-	//TODO support name instead of ID for destroy, stop, start
-	destroyEnvCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to destroy")
-	destroyEnvCmd.MarkFlagRequired("id")
+	startEnvironmentCmd.Flags().String("name", "", "Specify the name of the environment you'd like to create an instance of")
+	startEnvironmentCmd.MarkFlagRequired("name")
 
-	stopEnvironmentCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to stop")
-	stopEnvironmentCmd.MarkFlagRequired("id")
+	startEnvironmentCmd.Flags().StringSlice("ids", []string{}, "Specify a comma-seperated list of Zeet Project IDs")
+	startEnvironmentCmd.MarkFlagRequired("ids")
 
-	startEnvironmentCmd.Flags().String("id", "", "Specify the ID of the environment you'd like to create an instance of")
-	startEnvironmentCmd.MarkFlagRequired("id")
 	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : Branch combos that you would like to override from the normal Production Branch of each Project. Format: project_id:branch,proj..")
 }

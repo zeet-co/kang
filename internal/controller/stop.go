@@ -7,27 +7,22 @@ import (
 
 	"github.com/google/uuid"
 	pkgErrors "github.com/pkg/errors"
-	"github.com/zeet-co/kang/internal/storage/table"
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 )
 
-func (c *Controller) StopEnvironment(envID uuid.UUID) error {
-
-	var env table.Environment
-
-	err := c.db.DB.First(&env, envID).Error
-	if err != nil {
-		return pkgErrors.WithStack(err)
-	}
+func (c *Controller) StopEnvironment(envName string) error {
 
 	groupName := ZeetGroupName
-	subGroup := env.Name
+	subGroup := envName
+
+	fmt.Printf("Stopping environment located in %s/%s\n", groupName, subGroup)
 
 	group, err := c.zeet.GetGroup(context.Background(), groupName)
 
 	if err != nil {
 		if err == v0.NotFoundError {
 			// no group/subgroup = successfully deleted, exit
+			fmt.Printf("Group doesn't exist; prior invocation must have succeeded, exiting\n")
 			return nil
 		}
 		return pkgErrors.WithStack(err)
@@ -46,8 +41,11 @@ func (c *Controller) StopEnvironment(envID uuid.UUID) error {
 
 	if sg == nil {
 		// no subgroup = successfully deleted, exit
+		fmt.Printf("SubGroup doesn't exist; prior invocation must have succeeded, exiting\n")
 		return nil
 	}
+
+	fmt.Printf("Found %d projects in %s/%s; deleting now...\n", len(sg.Projects), groupName, subGroup)
 
 	ids := make([]uuid.UUID, len(sg.Projects))
 
@@ -58,6 +56,7 @@ func (c *Controller) StopEnvironment(envID uuid.UUID) error {
 	errs := []error{}
 
 	for _, id := range ids {
+		fmt.Printf("Deleting project %s\n", id)
 		if err := c.zeet.DeleteProject(context.Background(), id); err != nil {
 			errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
 		}

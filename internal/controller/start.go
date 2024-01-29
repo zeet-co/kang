@@ -7,39 +7,34 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/zeet-co/kang/internal/storage/table"
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 	"golang.org/x/sync/errgroup"
 )
 
 type StartEnvironmentOpts struct {
 	ProjectBranchOverrides map[uuid.UUID]string
+	EnvName                string
+	ProjectIDs             []uuid.UUID
+	TeamID                 uuid.UUID
 }
 
-func (c *Controller) StartEnvironment(envID, teamID uuid.UUID, opts StartEnvironmentOpts) error {
-	var env table.Environment
-
-	err := c.db.DB.First(&env, envID).Error
-	if err != nil {
-		return errors.WithStack(errors.Wrap(err, "could not find environment"))
-	}
-
+func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 	group := ZeetGroupName
-	subGroup := env.Name
+	subGroup := opts.EnvName
 
-	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(group, subGroup, teamID)
+	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(group, subGroup, opts.TeamID)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, "could not ensure group / subgroup"))
 	}
 
-	projects := make([]*v0.Repo, len(env.ProjectIDs))
+	projects := make([]*v0.Repo, len(opts.ProjectIDs))
 
 	var wg sync.WaitGroup
 	// var repos []*Repo
 	eg := new(errgroup.Group)
 
 	// Assuming you have a slice of inputs for GetRepo
-	for i, id := range env.ProjectIDs {
+	for i, id := range opts.ProjectIDs {
 		wg.Add(1)
 		id := id // capture range variable
 		i := i
@@ -66,7 +61,7 @@ func (c *Controller) StartEnvironment(envID, teamID uuid.UUID, opts StartEnviron
 		//TODO scale down resources on branch deployments (?)
 		//TODO handle database linking
 
-		newName := fmt.Sprintf("%s-%s", p.Name, env.Name)
+		newName := fmt.Sprintf("%s-%s", p.Name, opts.EnvName)
 		pID, err := c.zeet.DuplicateProject(context.Background(), p.ID, groupID, subGroupID, newName)
 		if err != nil {
 			return errors.WithStack(errors.Wrap(err, "could not duplicate project"))
