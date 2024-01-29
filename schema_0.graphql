@@ -1874,9 +1874,15 @@ type Deployment {
   deployStep: PipelineStep
   alternativeImages: [AlternativeImage!]
   ephemeralContainers: [EphemeralContainer]
+  alert(id: UUID!): DeploymentAlert
   events: [Event!]!
   runtime: Runtime
   terraformOperation: TerraformOperation
+}
+
+interface DeploymentAlert {
+  createdAt: Time!
+  resolvedAt: Time
 }
 
 type DeploymentConnection {
@@ -1889,6 +1895,15 @@ type DeploymentError {
   message: String!
   errorID: String
   errorCode: String
+}
+
+type DeploymentPodCrashAlert implements DeploymentAlert {
+  id: UUID!
+  namespace: String
+  podName: String
+  previousPodLogs: Logs
+  createdAt: Time!
+  resolvedAt: Time
 }
 
 input DeploymentsInput {
@@ -2594,6 +2609,11 @@ input GitSourceIntegrationInput {
   bitbucketIntegrationID: UUID
 }
 
+enum GitSubmodulesType {
+  NONE
+  RECURSIVE
+}
+
 input GPUInput {
   type: String
   count: Int!
@@ -3119,6 +3139,7 @@ type Mutation {
   approveBlueprintDriverWorkflow(workflowID: UUID!): BlueprintDriverWorkflow
   abortBlueprintDriverWorkflow(workflowID: UUID!): UUID
   createEphemeralContainer(deploymentId: UUID!, input: CreateEphemeralContainerInput!): EphemeralContainer!
+  generateDownloadableLogLink(deploymentID: UUID!): String!
   addDOAccount(input: AddDOAccountInput!): DOAccount!
   updateDOAccount(input: UpdateDOAccountInput!): Boolean!
   removeDOAccount(id: UUID!): Boolean!
@@ -4008,6 +4029,7 @@ type Repo {
   buildMethod: BuildMethod
   buildMethodSuggestions: [BuildMethod!]
   noBuildCache: Boolean
+  gitSubmodules: GitSubmodulesType
   kanikoFlags: KanikoFlags
   resources: ContainerResourcesSpec
   buildResources: ContainerResourcesSpec
@@ -4258,6 +4280,7 @@ input ResourceBuildInput {
   build: ProjectBuildInput
   buildTarget: BuildTargetInput
   buildResources: ContainerResourcesSpecInput
+  gitSubmodules: GitSubmodulesType
   kanikoFlags: KanikoFlagsInput
   noBuildCache: Boolean
   containerRegistryID: UUID
@@ -5229,6 +5252,7 @@ input UpdateProjectInput {
   pythonVersion: String
   golangVersion: String
   noBuildCache: Boolean
+  gitSubmodules: GitSubmodulesType
   kanikoFlags: KanikoFlagsInput
   alternativeImageTagTemplates: [String!]
   volumes: JSON

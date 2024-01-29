@@ -754,6 +754,17 @@ enum CloudProvider {
   TENCENT
 }
 
+type CloudResource {
+  name: String!
+  status: ResourceStatus!
+  type: ResourceType!
+  createdAt: Time
+  owners: [ResourceOwner!]
+  resources: [CloudResource!]
+  metric(types: [MetricType!]!, clusterId: UUID!, projectId: UUID!): [ResourceMetric!]
+  log(clusterId: UUID!, projectId: UUID!): [Log!]
+}
+
 type Cluster {
   id: UUID!
   displayName: String!
@@ -873,11 +884,6 @@ enum ClusterStatus {
 input ConfigureMarketplaceBlueprintInput {
   blueprintId: UUID!
   enabled: Boolean
-}
-
-type ContainerMetric {
-  name: String!
-  metrics: [ObservabilityMetric!]
 }
 
 type ContainerRegistry {
@@ -2347,6 +2353,7 @@ type Mutation {
 
   """duplicate a repo to deployv2 project, the input must be a repo id"""
   duplicateRepoToDeployV2(repoId: UUID!): Project!
+  generateDownloadableLogLinkForWorkflowRunStep(actionStepId: UUID!): String!
   submitWorkflow(input: SubmitWorkflowInput!): WorkflowRun!
   createWorkflow(input: CreateWorkflowInput!): Workflow!
   updateWorkflow(id: UUID!, input: UpdateWorkflowInput!): Workflow!
@@ -2367,12 +2374,8 @@ type ObservabilityConfig {
   selector: ObservabilityResourceSelector
 }
 
-type ObservabilityMetric {
-  type: MetricType
-  entries: [MetricEntry!]
-}
-
 type ObservabilityResourceSelector {
+  type: ResourceType!
   namespace: String
   resourceName: String
   containerName: String
@@ -2380,6 +2383,7 @@ type ObservabilityResourceSelector {
 }
 
 input ObservabilityResourceSelectorInput {
+  type: ResourceType!
   namespace: String
   resourceName: String
   containerName: String
@@ -2494,11 +2498,8 @@ type Project {
   updatedAt: Time!
   clusters: [Cluster!]!
   output: ProjectOutput
+  resources(clusterId: UUID!, selector: ObservabilityResourceSelectorInput): [CloudResource!]
   observabilityConfig: ObservabilityConfig
-  metric(types: [MetricType!]!, selector: ObservabilityResourceSelectorInput): [ResourceMetric!]
-  log(selector: ObservabilityResourceSelectorInput): [Log!]
-  metricEnabled(metricSource: MetricSourceType): Boolean!
-  logEnabled(logSource: LogSourceType, selector: ObservabilityResourceSelectorInput): Boolean!
   connector(type: ProjectConnectorType!): ProjectConnector
   link(id: UUID!): ProjectLink
   availableProviders(type: ProjectLinkType!): [Project!]!
@@ -2738,13 +2739,34 @@ input ResourceFilter {
 }
 
 type ResourceMetric {
-  name: String!
+  type: MetricType
+  entries: [MetricEntry!]
+}
+
+type ResourceOwner {
   type: ResourceType!
-  metrics: [ContainerMetric!]
+  name: String!
+}
+
+enum ResourceStatus {
+  UNKNOWN
+  WAITING
+  RUNNING
+  PENDING
+  SUCCEEDED
+  FAILED
+  TERMINATED
 }
 
 enum ResourceType {
+  CONTAINER
   POD
+  JOB
+  DEPLOYMENT
+  REPLICASET
+  STATEFULSET
+  DAEMONSET
+  SERVICE
 }
 
 interface RevisableEntity {
@@ -2755,12 +2777,29 @@ interface RevisableEntity {
 type RevisionAuthorInfo {
   """A short description of how the revision was initiated."""
   summary: String!
+
+  """
+  When true, this indicates the original author's user has since been deleted.
+  """
+  creatorDeleted: Boolean!
 }
 
 type RevisionMetadata {
   id: UUID!
   description: String!
   sequenceId: Int!
+
+  """
+  The user that authored this revision.
+  
+  If the user has been deleted, this will contain a placeholder User, with the
+  Name field changed to the deleted user's username.
+  When this field represents a deleted user, it SHOULD NOT be used for any API
+  operations expecting a userId, and any attempts will likely fail.
+  
+  To confirm whether this field represents a deleted user, you may additionally
+  consult the `authorInfo.creatorDeleted` flag (see `RevisionAuthorInfo`).
+  """
   createdBy: User!
   createdAt: Time!
 
