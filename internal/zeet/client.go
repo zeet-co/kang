@@ -2,10 +2,13 @@ package zeet
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 	v1 "github.com/zeet-co/kang/internal/zeet/v1"
+	"golang.org/x/sync/errgroup"
 )
 
 type Client struct {
@@ -80,4 +83,39 @@ func (c *Client) UpdateProjectBranch(ctx context.Context, projectID uuid.UUID, b
 
 func (c *Client) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	return c.v0Client.DeleteProject(ctx, id)
+}
+
+func (c *Client) GetProjectsByID(ctx context.Context, projectIDs []uuid.UUID) ([]*v0.Repo, error) {
+
+	projects := make([]*v0.Repo, len(projectIDs))
+
+	var wg sync.WaitGroup
+	// var repos []*Repo
+	eg := new(errgroup.Group)
+
+	// Assuming you have a slice of inputs for GetRepo
+	for i, id := range projectIDs {
+		wg.Add(1)
+		id := id // capture range variable
+		i := i
+		eg.Go(func() error {
+			defer wg.Done()
+			repo, err := c.GetRepo(ctx, id)
+			if err != nil {
+				return err
+			}
+			// Use a mutex or other synchronization method if needed
+			projects[i] = repo
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+	// Check if any goroutines returned an error
+	if err := eg.Wait(); err != nil {
+		return nil, errors.WithStack(errors.Wrap(err, "could not fetch project information"))
+	}
+
+	return projects, nil
 }

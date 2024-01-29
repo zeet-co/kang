@@ -160,8 +160,12 @@ func (v *getGroupResponse) GetProject() getGroupProject { return v.Project }
 // getRepoRepo includes the requested fields of the GraphQL type Repo.
 type getRepoRepo struct {
 	// - v0.RepoID
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	Id                   uuid.UUID                       `json:"id"`
+	Name                 string                          `json:"name"`
+	Owner                getRepoRepoOwnerUser            `json:"owner"`
+	Project              getRepoRepoProject              `json:"project"`
+	ProjectEnvironment   getRepoRepoProjectEnvironment   `json:"projectEnvironment"`
+	ProductionDeployment getRepoRepoProductionDeployment `json:"productionDeployment"`
 }
 
 // GetId returns getRepoRepo.Id, and is useful for accessing the field via an interface.
@@ -169,6 +173,58 @@ func (v *getRepoRepo) GetId() uuid.UUID { return v.Id }
 
 // GetName returns getRepoRepo.Name, and is useful for accessing the field via an interface.
 func (v *getRepoRepo) GetName() string { return v.Name }
+
+// GetOwner returns getRepoRepo.Owner, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetOwner() getRepoRepoOwnerUser { return v.Owner }
+
+// GetProject returns getRepoRepo.Project, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetProject() getRepoRepoProject { return v.Project }
+
+// GetProjectEnvironment returns getRepoRepo.ProjectEnvironment, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetProjectEnvironment() getRepoRepoProjectEnvironment {
+	return v.ProjectEnvironment
+}
+
+// GetProductionDeployment returns getRepoRepo.ProductionDeployment, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetProductionDeployment() getRepoRepoProductionDeployment {
+	return v.ProductionDeployment
+}
+
+// getRepoRepoOwnerUser includes the requested fields of the GraphQL type User.
+type getRepoRepoOwnerUser struct {
+	Login string `json:"login"`
+}
+
+// GetLogin returns getRepoRepoOwnerUser.Login, and is useful for accessing the field via an interface.
+func (v *getRepoRepoOwnerUser) GetLogin() string { return v.Login }
+
+// getRepoRepoProductionDeployment includes the requested fields of the GraphQL type Deployment.
+type getRepoRepoProductionDeployment struct {
+	Id        uuid.UUID `json:"id"`
+	Endpoints []string  `json:"endpoints"`
+}
+
+// GetId returns getRepoRepoProductionDeployment.Id, and is useful for accessing the field via an interface.
+func (v *getRepoRepoProductionDeployment) GetId() uuid.UUID { return v.Id }
+
+// GetEndpoints returns getRepoRepoProductionDeployment.Endpoints, and is useful for accessing the field via an interface.
+func (v *getRepoRepoProductionDeployment) GetEndpoints() []string { return v.Endpoints }
+
+// getRepoRepoProject includes the requested fields of the GraphQL type Project.
+type getRepoRepoProject struct {
+	Name string `json:"name"`
+}
+
+// GetName returns getRepoRepoProject.Name, and is useful for accessing the field via an interface.
+func (v *getRepoRepoProject) GetName() string { return v.Name }
+
+// getRepoRepoProjectEnvironment includes the requested fields of the GraphQL type ProjectEnvironment.
+type getRepoRepoProjectEnvironment struct {
+	Name string `json:"name"`
+}
+
+// GetName returns getRepoRepoProjectEnvironment.Name, and is useful for accessing the field via an interface.
+func (v *getRepoRepoProjectEnvironment) GetName() string { return v.Name }
 
 // getRepoResponse is returned by getRepo on success.
 type getRepoResponse struct {
@@ -322,6 +378,19 @@ query getRepo ($id: UUID) {
 	repo(id: $id) {
 		id
 		name
+		owner {
+			login
+		}
+		project {
+			name
+		}
+		projectEnvironment {
+			name
+		}
+		productionDeployment {
+			id
+			endpoints
+		}
 	}
 }
 `

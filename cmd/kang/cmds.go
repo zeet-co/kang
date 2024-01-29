@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -62,6 +63,7 @@ var stopEnvironmentCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop all running instances of each Project in the Environment",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := context.Background()
 		cfg, err := config.New(cmd)
 		if err != nil {
 			return err
@@ -78,7 +80,32 @@ var stopEnvironmentCmd = &cobra.Command{
 			return err
 		}
 
-		return kang.StopEnvironment(envName)
+		return kang.StopEnvironment(ctx, envName)
+	},
+}
+
+var commentCmd = &cobra.Command{
+	Use:   "comment",
+	Short: "Comment high-level information on a given environment into a given Github Pull Request",
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		ctx := context.Background()
+		cfg, err := config.New(cmd)
+		if err != nil {
+			return err
+		}
+
+		kang, err := controller.NewController(cfg)
+		if err != nil {
+			return err
+		}
+
+		repo, _ := cmd.Flags().GetString("repo")
+		pr, _ := cmd.Flags().GetInt("pr")
+		token, _ := cmd.Flags().GetString("token")
+		envName, _ := cmd.Flags().GetString("env-name")
+
+		return kang.CommentGithub(ctx, pr, repo, token, envName)
 	},
 }
 
@@ -110,4 +137,15 @@ func init() {
 	startEnvironmentCmd.MarkFlagRequired("ids")
 
 	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : Branch combos that you would like to override from the normal Production Branch of each Project. Format: project_id:branch,proj..")
+
+	commentCmd.Flags().String("repo", "", "Github Repo that will be commented on")
+	commentCmd.MarkFlagRequired("repo")
+	commentCmd.Flags().Int("pr", 0, "Specify the PR number that should have a comment added to it")
+	commentCmd.MarkFlagRequired("pr")
+	commentCmd.Flags().String("token", "", "Github Token that will has permission to comment on the specified Github repo & PR")
+	commentCmd.MarkFlagRequired("token")
+
+	commentCmd.Flags().String("env-name", "", "Specify the name of the environment you'd like to create the comment from")
+	commentCmd.MarkFlagRequired("env-name")
+
 }

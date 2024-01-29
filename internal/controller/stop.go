@@ -10,22 +10,45 @@ import (
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 )
 
-func (c *Controller) StopEnvironment(envName string) error {
+func (c *Controller) StopEnvironment(ctx context.Context, envName string) error {
 
 	groupName := ZeetGroupName
 	subGroup := envName
 
 	fmt.Printf("Stopping environment located in %s/%s\n", groupName, subGroup)
 
+	errs := []error{}
+
+	ids, err := c.getProjectsInSubGroup(ctx, groupName, subGroup)
+	if err != nil {
+		return err
+	}
+
+	if ids == nil {
+		fmt.Println("No Projects found; exiting")
+		return nil
+	}
+
+	for _, id := range ids {
+		fmt.Printf("Deleting project %s\n", id)
+		if err := c.zeet.DeleteProject(context.Background(), id); err != nil {
+			errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func (c *Controller) getProjectsInSubGroup(ctx context.Context, groupName, subGroup string) ([]uuid.UUID, error) {
 	group, err := c.zeet.GetGroup(context.Background(), groupName)
 
 	if err != nil {
 		if err == v0.NotFoundError {
 			// no group/subgroup = successfully deleted, exit
-			fmt.Printf("Group doesn't exist; prior invocation must have succeeded, exiting\n")
-			return nil
+			fmt.Printf("Group %s doesn't exist\n", groupName)
+			return nil, nil
 		}
-		return pkgErrors.WithStack(err)
+		return nil, pkgErrors.WithStack(err)
 	}
 
 	var (
@@ -41,11 +64,11 @@ func (c *Controller) StopEnvironment(envName string) error {
 
 	if sg == nil {
 		// no subgroup = successfully deleted, exit
-		fmt.Printf("SubGroup doesn't exist; prior invocation must have succeeded, exiting\n")
-		return nil
+		fmt.Printf("SubGroup %s doesn't exist\n", subGroup)
+		return nil, nil
 	}
 
-	fmt.Printf("Found %d projects in %s/%s; deleting now...\n", len(sg.Projects), groupName, subGroup)
+	fmt.Printf("Found %d projects in %s/%s\n", len(sg.Projects), groupName, subGroup)
 
 	ids := make([]uuid.UUID, len(sg.Projects))
 
@@ -53,14 +76,5 @@ func (c *Controller) StopEnvironment(envName string) error {
 		ids[i] = p.ID
 	}
 
-	errs := []error{}
-
-	for _, id := range ids {
-		fmt.Printf("Deleting project %s\n", id)
-		if err := c.zeet.DeleteProject(context.Background(), id); err != nil {
-			errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
-		}
-	}
-
-	return errors.Join(errs...)
+	return ids, nil
 }

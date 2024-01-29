@@ -4,12 +4,20 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 )
 
+type Deployment struct {
+	ID        uuid.UUID
+	Endpoints []string
+}
+
 type Repo struct {
-	ID   uuid.UUID
-	Name string
+	ID                   uuid.UUID
+	Name                 string
+	Owner                string
+	GroupName            string
+	SubGroupName         string
+	ProductionDeployment Deployment
 }
 
 func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*Repo, error) {
@@ -20,12 +28,34 @@ query getRepo($id: UUID) {
   repo(id: $id) {
     id
 		name
+		owner {
+			login
+		}
+		project{
+			name
+		}
+		projectEnvironment {
+			name
+		}
+		productionDeployment {
+			id
+			endpoints
+		}
   }
 }
 `
 	res, err := getRepo(ctx, c.gql, id)
-	if err := copier.Copy(out, res.Repo); err != nil {
-		return nil, err
+
+	out = &Repo{
+		ID:           res.Repo.Id,
+		Name:         res.Repo.Name,
+		Owner:        res.Repo.Owner.Login,
+		GroupName:    res.Repo.Project.Name,
+		SubGroupName: res.Repo.ProjectEnvironment.Name,
+		ProductionDeployment: Deployment{
+			ID:        res.Repo.ProductionDeployment.Id,
+			Endpoints: res.Repo.ProductionDeployment.Endpoints,
+		},
 	}
 
 	return out, err

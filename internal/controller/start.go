@@ -3,12 +3,9 @@ package controller
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	v0 "github.com/zeet-co/kang/internal/zeet/v0"
-	"golang.org/x/sync/errgroup"
 )
 
 type StartEnvironmentOpts struct {
@@ -27,33 +24,10 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 		return errors.WithStack(errors.Wrap(err, "could not ensure group / subgroup"))
 	}
 
-	projects := make([]*v0.Repo, len(opts.ProjectIDs))
+	ctx := context.Background()
 
-	var wg sync.WaitGroup
-	// var repos []*Repo
-	eg := new(errgroup.Group)
-
-	// Assuming you have a slice of inputs for GetRepo
-	for i, id := range opts.ProjectIDs {
-		wg.Add(1)
-		id := id // capture range variable
-		i := i
-		eg.Go(func() error {
-			defer wg.Done()
-			repo, err := c.zeet.GetRepo(context.Background(), id)
-			if err != nil {
-				return err
-			}
-			// Use a mutex or other synchronization method if needed
-			projects[i] = repo
-			return nil
-		})
-	}
-
-	// Wait for all goroutines to finish
-	wg.Wait()
-	// Check if any goroutines returned an error
-	if err := eg.Wait(); err != nil {
+	projects, err := c.zeet.GetProjectsByID(ctx, opts.ProjectIDs)
+	if err != nil {
 		return errors.WithStack(errors.Wrap(err, "could not fetch project information"))
 	}
 
