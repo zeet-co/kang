@@ -1,0 +1,5 @@
+name: "Setup Kang"
+description: Sets up Kang CLI in your GitHub Actions workflow. Create multi-project ephemeral environments on Zeet from Github Pull Requests.
+runs:
+  using: docker
+  image: 'Dockerfile'
