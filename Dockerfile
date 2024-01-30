@@ -27,4 +27,4 @@ WORKDIR /root/
 COPY --from=builder /app/kang .
 
 # Command to run the executable
-ENTRYPOINT ["./kang"]
+ENTRYPOINT ["/root/kang"]
