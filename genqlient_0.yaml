@@ -6,6 +6,8 @@ operations:
 generated: internal/zeet/v0/generated.go
 allow_broken_features: true
 bindings:
+  YAML:
+    type: string
   UUID:
     type: github.com/google/uuid.UUID
   Time:
@@ -19,3 +21,4 @@ bindings:
     type: string
   JSON:
     type: string
+optional: pointer

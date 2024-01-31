@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 func (c *Client) DuplicateProject(ctx context.Context, projectID, groupID, subGroupID uuid.UUID, newName string) (uuid.UUID, error) {
@@ -25,7 +27,17 @@ func (c *Client) DuplicateProject(ctx context.Context, projectID, groupID, subGr
 	}
 `
 
-	res, err := duplicateProject(ctx, c.gql, projectID, groupID, subGroupID, newName)
+	res, err := duplicateProject(ctx, c.gql, projectID, &groupID, &subGroupID, newName)
+
+	var errList gqlerror.List
+	if errors.As(err, &errList) {
+		for _, err := range errList {
+			if err.Message == fmt.Sprintf("project name %s cannot be duplicated in the target sub-group", newName) {
+				return uuid.Nil, AlreadyExistsError
+			}
+		}
+	}
+
 	if err != nil {
 		return uuid.Nil, err
 	}

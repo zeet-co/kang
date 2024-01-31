@@ -9,6 +9,849 @@ import (
 	"github.com/google/uuid"
 )
 
+type AcceleratorSpecInput struct {
+	Type         string  `json:"type"`
+	Count        int     `json:"count"`
+	TpuTfVersion *string `json:"tpuTfVersion"`
+}
+
+// GetType returns AcceleratorSpecInput.Type, and is useful for accessing the field via an interface.
+func (v *AcceleratorSpecInput) GetType() string { return v.Type }
+
+// GetCount returns AcceleratorSpecInput.Count, and is useful for accessing the field via an interface.
+func (v *AcceleratorSpecInput) GetCount() int { return v.Count }
+
+// GetTpuTfVersion returns AcceleratorSpecInput.TpuTfVersion, and is useful for accessing the field via an interface.
+func (v *AcceleratorSpecInput) GetTpuTfVersion() *string { return v.TpuTfVersion }
+
+type AutoscalingInput struct {
+	MinReplicas          int                       `json:"minReplicas"`
+	MaxReplicas          int                       `json:"maxReplicas"`
+	CoolDownPeriod       *int                      `json:"coolDownPeriod"`
+	Triggers             []AutoscalingTriggerInput `json:"triggers"`
+	KedaScaledObjectSpec *string                   `json:"kedaScaledObjectSpec"`
+}
+
+// GetMinReplicas returns AutoscalingInput.MinReplicas, and is useful for accessing the field via an interface.
+func (v *AutoscalingInput) GetMinReplicas() int { return v.MinReplicas }
+
+// GetMaxReplicas returns AutoscalingInput.MaxReplicas, and is useful for accessing the field via an interface.
+func (v *AutoscalingInput) GetMaxReplicas() int { return v.MaxReplicas }
+
+// GetCoolDownPeriod returns AutoscalingInput.CoolDownPeriod, and is useful for accessing the field via an interface.
+func (v *AutoscalingInput) GetCoolDownPeriod() *int { return v.CoolDownPeriod }
+
+// GetTriggers returns AutoscalingInput.Triggers, and is useful for accessing the field via an interface.
+func (v *AutoscalingInput) GetTriggers() []AutoscalingTriggerInput { return v.Triggers }
+
+// GetKedaScaledObjectSpec returns AutoscalingInput.KedaScaledObjectSpec, and is useful for accessing the field via an interface.
+func (v *AutoscalingInput) GetKedaScaledObjectSpec() *string { return v.KedaScaledObjectSpec }
+
+type AutoscalingTriggerInput struct {
+	Type AutoscalingType `json:"type"`
+	Spec string          `json:"spec"`
+}
+
+// GetType returns AutoscalingTriggerInput.Type, and is useful for accessing the field via an interface.
+func (v *AutoscalingTriggerInput) GetType() AutoscalingType { return v.Type }
+
+// GetSpec returns AutoscalingTriggerInput.Spec, and is useful for accessing the field via an interface.
+func (v *AutoscalingTriggerInput) GetSpec() string { return v.Spec }
+
+type AutoscalingType string
+
+const (
+	AutoscalingTypeCpu        AutoscalingType = "CPU"
+	AutoscalingTypeMemory     AutoscalingType = "MEMORY"
+	AutoscalingTypePrometheus AutoscalingType = "PROMETHEUS"
+	AutoscalingTypeCustom     AutoscalingType = "CUSTOM"
+)
+
+type BetterStackIntegrationInput struct {
+	Token string `json:"token"`
+}
+
+// GetToken returns BetterStackIntegrationInput.Token, and is useful for accessing the field via an interface.
+func (v *BetterStackIntegrationInput) GetToken() string { return v.Token }
+
+type ContainerResourcesSpecInput struct {
+	Cpu              float64               `json:"cpu"`
+	Memory           float64               `json:"memory"`
+	EphemeralStorage *float64              `json:"ephemeralStorage"`
+	Accelerator      *AcceleratorSpecInput `json:"accelerator"`
+	Spot             *bool                 `json:"spot"`
+}
+
+// GetCpu returns ContainerResourcesSpecInput.Cpu, and is useful for accessing the field via an interface.
+func (v *ContainerResourcesSpecInput) GetCpu() float64 { return v.Cpu }
+
+// GetMemory returns ContainerResourcesSpecInput.Memory, and is useful for accessing the field via an interface.
+func (v *ContainerResourcesSpecInput) GetMemory() float64 { return v.Memory }
+
+// GetEphemeralStorage returns ContainerResourcesSpecInput.EphemeralStorage, and is useful for accessing the field via an interface.
+func (v *ContainerResourcesSpecInput) GetEphemeralStorage() *float64 { return v.EphemeralStorage }
+
+// GetAccelerator returns ContainerResourcesSpecInput.Accelerator, and is useful for accessing the field via an interface.
+func (v *ContainerResourcesSpecInput) GetAccelerator() *AcceleratorSpecInput { return v.Accelerator }
+
+// GetSpot returns ContainerResourcesSpecInput.Spot, and is useful for accessing the field via an interface.
+func (v *ContainerResourcesSpecInput) GetSpot() *bool { return v.Spot }
+
+type DatadogLogIntegrationInput struct {
+	Key  string  `json:"key"`
+	Host *string `json:"host"`
+}
+
+// GetKey returns DatadogLogIntegrationInput.Key, and is useful for accessing the field via an interface.
+func (v *DatadogLogIntegrationInput) GetKey() string { return v.Key }
+
+// GetHost returns DatadogLogIntegrationInput.Host, and is useful for accessing the field via an interface.
+func (v *DatadogLogIntegrationInput) GetHost() *string { return v.Host }
+
+type DeployRuntime string
+
+const (
+	DeployRuntimeAwsLambda   DeployRuntime = "AWS_LAMBDA"
+	DeployRuntimeAwsEcs      DeployRuntime = "AWS_ECS"
+	DeployRuntimeGcpCloudRun DeployRuntime = "GCP_CLOUD_RUN"
+	DeployRuntimeKubernetes  DeployRuntime = "KUBERNETES"
+	DeployRuntimeKnative     DeployRuntime = "KNATIVE"
+)
+
+type DeployStrategy string
+
+const (
+	DeployStrategyRestart   DeployStrategy = "RESTART"
+	DeployStrategyRolling   DeployStrategy = "ROLLING"
+	DeployStrategyCanary    DeployStrategy = "CANARY"
+	DeployStrategyBlueGreen DeployStrategy = "BLUE_GREEN"
+	DeployStrategyRedBlack  DeployStrategy = "RED_BLACK"
+)
+
+type DeployTarget string
+
+const (
+	DeployTargetKubernetes        DeployTarget = "KUBERNETES"
+	DeployTargetServerless        DeployTarget = "SERVERLESS"
+	DeployTargetTerraform         DeployTarget = "TERRAFORM"
+	DeployTargetPulumi            DeployTarget = "PULUMI"
+	DeployTargetAwsSam            DeployTarget = "AWS_SAM"
+	DeployTargetAwsCdk            DeployTarget = "AWS_CDK"
+	DeployTargetAwsCloudformation DeployTarget = "AWS_CLOUDFORMATION"
+	DeployTargetGcpCloudRun       DeployTarget = "GCP_CLOUD_RUN"
+)
+
+type DeployType string
+
+const (
+	DeployTypeKubernetes             DeployType = "KUBERNETES"
+	DeployTypeKnative                DeployType = "KNATIVE"
+	DeployTypeHelm                   DeployType = "HELM"
+	DeployTypeKubectl                DeployType = "KUBECTL"
+	DeployTypeKubernetesUnstructured DeployType = "KUBERNETES_UNSTRUCTURED"
+)
+
+type GPUInput struct {
+	Type  *string `json:"type"`
+	Count int     `json:"count"`
+}
+
+// GetType returns GPUInput.Type, and is useful for accessing the field via an interface.
+func (v *GPUInput) GetType() *string { return v.Type }
+
+// GetCount returns GPUInput.Count, and is useful for accessing the field via an interface.
+func (v *GPUInput) GetCount() int { return v.Count }
+
+type GitHubRepoIntegrationInput struct {
+	GithubConnectionID  *int    `json:"githubConnectionID"`
+	GithubOwner         *string `json:"githubOwner"`
+	GithubName          *string `json:"githubName"`
+	AutoDeployBranch    *bool   `json:"autoDeployBranch"`
+	AutoStopBranch      *bool   `json:"autoStopBranch"`
+	AutoStopPullRequest *bool   `json:"autoStopPullRequest"`
+	BranchIgnore        *string `json:"branchIgnore"`
+	BranchStopIgnore    *string `json:"branchStopIgnore"`
+}
+
+// GetGithubConnectionID returns GitHubRepoIntegrationInput.GithubConnectionID, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetGithubConnectionID() *int { return v.GithubConnectionID }
+
+// GetGithubOwner returns GitHubRepoIntegrationInput.GithubOwner, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetGithubOwner() *string { return v.GithubOwner }
+
+// GetGithubName returns GitHubRepoIntegrationInput.GithubName, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetGithubName() *string { return v.GithubName }
+
+// GetAutoDeployBranch returns GitHubRepoIntegrationInput.AutoDeployBranch, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetAutoDeployBranch() *bool { return v.AutoDeployBranch }
+
+// GetAutoStopBranch returns GitHubRepoIntegrationInput.AutoStopBranch, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetAutoStopBranch() *bool { return v.AutoStopBranch }
+
+// GetAutoStopPullRequest returns GitHubRepoIntegrationInput.AutoStopPullRequest, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetAutoStopPullRequest() *bool { return v.AutoStopPullRequest }
+
+// GetBranchIgnore returns GitHubRepoIntegrationInput.BranchIgnore, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetBranchIgnore() *string { return v.BranchIgnore }
+
+// GetBranchStopIgnore returns GitHubRepoIntegrationInput.BranchStopIgnore, and is useful for accessing the field via an interface.
+func (v *GitHubRepoIntegrationInput) GetBranchStopIgnore() *string { return v.BranchStopIgnore }
+
+type GitSubmodulesType string
+
+const (
+	GitSubmodulesTypeNone      GitSubmodulesType = "NONE"
+	GitSubmodulesTypeRecursive GitSubmodulesType = "RECURSIVE"
+)
+
+type GitlabConnectionInput struct {
+	GitlabIntegrationID uuid.UUID `json:"gitlabIntegrationID"`
+	ProjectPath         *string   `json:"projectPath"`
+}
+
+// GetGitlabIntegrationID returns GitlabConnectionInput.GitlabIntegrationID, and is useful for accessing the field via an interface.
+func (v *GitlabConnectionInput) GetGitlabIntegrationID() uuid.UUID { return v.GitlabIntegrationID }
+
+// GetProjectPath returns GitlabConnectionInput.ProjectPath, and is useful for accessing the field via an interface.
+func (v *GitlabConnectionInput) GetProjectPath() *string { return v.ProjectPath }
+
+type GitlabRepoIntegrationInput struct {
+	GitlabConnection    *GitlabConnectionInput `json:"gitlabConnection"`
+	AutoDeployBranch    *bool                  `json:"autoDeployBranch"`
+	AutoStopBranch      *bool                  `json:"autoStopBranch"`
+	AutoStopPullRequest *bool                  `json:"autoStopPullRequest"`
+	BranchIgnore        *string                `json:"branchIgnore"`
+	BranchStopIgnore    *string                `json:"branchStopIgnore"`
+}
+
+// GetGitlabConnection returns GitlabRepoIntegrationInput.GitlabConnection, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetGitlabConnection() *GitlabConnectionInput {
+	return v.GitlabConnection
+}
+
+// GetAutoDeployBranch returns GitlabRepoIntegrationInput.AutoDeployBranch, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetAutoDeployBranch() *bool { return v.AutoDeployBranch }
+
+// GetAutoStopBranch returns GitlabRepoIntegrationInput.AutoStopBranch, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetAutoStopBranch() *bool { return v.AutoStopBranch }
+
+// GetAutoStopPullRequest returns GitlabRepoIntegrationInput.AutoStopPullRequest, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetAutoStopPullRequest() *bool { return v.AutoStopPullRequest }
+
+// GetBranchIgnore returns GitlabRepoIntegrationInput.BranchIgnore, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetBranchIgnore() *string { return v.BranchIgnore }
+
+// GetBranchStopIgnore returns GitlabRepoIntegrationInput.BranchStopIgnore, and is useful for accessing the field via an interface.
+func (v *GitlabRepoIntegrationInput) GetBranchStopIgnore() *string { return v.BranchStopIgnore }
+
+type KanikoFlagsInput struct {
+	CompressedCaching *bool `json:"compressedCaching"`
+}
+
+// GetCompressedCaching returns KanikoFlagsInput.CompressedCaching, and is useful for accessing the field via an interface.
+func (v *KanikoFlagsInput) GetCompressedCaching() *bool { return v.CompressedCaching }
+
+type KubernetesCustomizationInput struct {
+	NodeSelector       *string `json:"nodeSelector"`
+	HostNetwork        *bool   `json:"hostNetwork"`
+	PodSpecPatch       *string `json:"podSpecPatch"`
+	IngressSpecPatch   *string `json:"ingressSpecPatch"`
+	PodAnnotations     *string `json:"podAnnotations"`
+	ServiceAnnotations *string `json:"serviceAnnotations"`
+	IngressAnnotations *string `json:"ingressAnnotations"`
+	ClusterIssuerName  *string `json:"clusterIssuerName"`
+}
+
+// GetNodeSelector returns KubernetesCustomizationInput.NodeSelector, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetNodeSelector() *string { return v.NodeSelector }
+
+// GetHostNetwork returns KubernetesCustomizationInput.HostNetwork, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetHostNetwork() *bool { return v.HostNetwork }
+
+// GetPodSpecPatch returns KubernetesCustomizationInput.PodSpecPatch, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetPodSpecPatch() *string { return v.PodSpecPatch }
+
+// GetIngressSpecPatch returns KubernetesCustomizationInput.IngressSpecPatch, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetIngressSpecPatch() *string { return v.IngressSpecPatch }
+
+// GetPodAnnotations returns KubernetesCustomizationInput.PodAnnotations, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetPodAnnotations() *string { return v.PodAnnotations }
+
+// GetServiceAnnotations returns KubernetesCustomizationInput.ServiceAnnotations, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetServiceAnnotations() *string { return v.ServiceAnnotations }
+
+// GetIngressAnnotations returns KubernetesCustomizationInput.IngressAnnotations, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetIngressAnnotations() *string { return v.IngressAnnotations }
+
+// GetClusterIssuerName returns KubernetesCustomizationInput.ClusterIssuerName, and is useful for accessing the field via an interface.
+func (v *KubernetesCustomizationInput) GetClusterIssuerName() *string { return v.ClusterIssuerName }
+
+type KubernetesSecretMountInput struct {
+	SecretName string `json:"secretName"`
+	MountPath  string `json:"mountPath"`
+}
+
+// GetSecretName returns KubernetesSecretMountInput.SecretName, and is useful for accessing the field via an interface.
+func (v *KubernetesSecretMountInput) GetSecretName() string { return v.SecretName }
+
+// GetMountPath returns KubernetesSecretMountInput.MountPath, and is useful for accessing the field via an interface.
+func (v *KubernetesSecretMountInput) GetMountPath() string { return v.MountPath }
+
+type LogDNAIntegrationInput struct {
+	Key string `json:"key"`
+}
+
+// GetKey returns LogDNAIntegrationInput.Key, and is useful for accessing the field via an interface.
+func (v *LogDNAIntegrationInput) GetKey() string { return v.Key }
+
+type LogShipperInput struct {
+	Type        *LogShipperType              `json:"type"`
+	Logz        *LogzIntegrationInput        `json:"logz"`
+	Syslog      *SyslogIntegrationInput      `json:"syslog"`
+	LogDNA      *LogDNAIntegrationInput      `json:"logDNA"`
+	Datadog     *DatadogLogIntegrationInput  `json:"datadog"`
+	Betterstack *BetterStackIntegrationInput `json:"betterstack"`
+}
+
+// GetType returns LogShipperInput.Type, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetType() *LogShipperType { return v.Type }
+
+// GetLogz returns LogShipperInput.Logz, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetLogz() *LogzIntegrationInput { return v.Logz }
+
+// GetSyslog returns LogShipperInput.Syslog, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetSyslog() *SyslogIntegrationInput { return v.Syslog }
+
+// GetLogDNA returns LogShipperInput.LogDNA, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetLogDNA() *LogDNAIntegrationInput { return v.LogDNA }
+
+// GetDatadog returns LogShipperInput.Datadog, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetDatadog() *DatadogLogIntegrationInput { return v.Datadog }
+
+// GetBetterstack returns LogShipperInput.Betterstack, and is useful for accessing the field via an interface.
+func (v *LogShipperInput) GetBetterstack() *BetterStackIntegrationInput { return v.Betterstack }
+
+type LogShipperType string
+
+const (
+	LogShipperTypeLogzio      LogShipperType = "LOGZIO"
+	LogShipperTypeSyslog      LogShipperType = "SYSLOG"
+	LogShipperTypeLogdna      LogShipperType = "LOGDNA"
+	LogShipperTypeDatadog     LogShipperType = "DATADOG"
+	LogShipperTypeBetterstack LogShipperType = "BETTERSTACK"
+)
+
+type LogzIntegrationInput struct {
+	Token string `json:"token"`
+	Url   string `json:"url"`
+}
+
+// GetToken returns LogzIntegrationInput.Token, and is useful for accessing the field via an interface.
+func (v *LogzIntegrationInput) GetToken() string { return v.Token }
+
+// GetUrl returns LogzIntegrationInput.Url, and is useful for accessing the field via an interface.
+func (v *LogzIntegrationInput) GetUrl() string { return v.Url }
+
+type ProbeInput struct {
+	Command             *string `json:"command"`
+	HttpEndpoint        *string `json:"httpEndpoint"`
+	TcpEndpoint         *string `json:"tcpEndpoint"`
+	InitialDelaySeconds *int    `json:"initialDelaySeconds"`
+	PeriodSeconds       *int    `json:"periodSeconds"`
+	SuccessThreshold    *int    `json:"successThreshold"`
+	FailureThreshold    *int    `json:"failureThreshold"`
+	TimeoutSeconds      *int    `json:"timeoutSeconds"`
+}
+
+// GetCommand returns ProbeInput.Command, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetCommand() *string { return v.Command }
+
+// GetHttpEndpoint returns ProbeInput.HttpEndpoint, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetHttpEndpoint() *string { return v.HttpEndpoint }
+
+// GetTcpEndpoint returns ProbeInput.TcpEndpoint, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetTcpEndpoint() *string { return v.TcpEndpoint }
+
+// GetInitialDelaySeconds returns ProbeInput.InitialDelaySeconds, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetInitialDelaySeconds() *int { return v.InitialDelaySeconds }
+
+// GetPeriodSeconds returns ProbeInput.PeriodSeconds, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetPeriodSeconds() *int { return v.PeriodSeconds }
+
+// GetSuccessThreshold returns ProbeInput.SuccessThreshold, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetSuccessThreshold() *int { return v.SuccessThreshold }
+
+// GetFailureThreshold returns ProbeInput.FailureThreshold, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetFailureThreshold() *int { return v.FailureThreshold }
+
+// GetTimeoutSeconds returns ProbeInput.TimeoutSeconds, and is useful for accessing the field via an interface.
+func (v *ProbeInput) GetTimeoutSeconds() *int { return v.TimeoutSeconds }
+
+type ProjectDeployInput struct {
+	DeployTarget    DeployTarget   `json:"deployTarget"`
+	DeployType      *DeployType    `json:"deployType"`
+	DeployRuntime   *DeployRuntime `json:"deployRuntime"`
+	AwsAccountID    *uuid.UUID     `json:"awsAccountID"`
+	GcpAccountID    *uuid.UUID     `json:"gcpAccountID"`
+	DoAccountID     *uuid.UUID     `json:"doAccountID"`
+	LinodeAccountID *uuid.UUID     `json:"linodeAccountID"`
+	VultrAccountID  *uuid.UUID     `json:"vultrAccountID"`
+	ClusterID       *uuid.UUID     `json:"clusterID"`
+	Region          *string        `json:"region"`
+}
+
+// GetDeployTarget returns ProjectDeployInput.DeployTarget, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetDeployTarget() DeployTarget { return v.DeployTarget }
+
+// GetDeployType returns ProjectDeployInput.DeployType, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetDeployType() *DeployType { return v.DeployType }
+
+// GetDeployRuntime returns ProjectDeployInput.DeployRuntime, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetDeployRuntime() *DeployRuntime { return v.DeployRuntime }
+
+// GetAwsAccountID returns ProjectDeployInput.AwsAccountID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetAwsAccountID() *uuid.UUID { return v.AwsAccountID }
+
+// GetGcpAccountID returns ProjectDeployInput.GcpAccountID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetGcpAccountID() *uuid.UUID { return v.GcpAccountID }
+
+// GetDoAccountID returns ProjectDeployInput.DoAccountID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetDoAccountID() *uuid.UUID { return v.DoAccountID }
+
+// GetLinodeAccountID returns ProjectDeployInput.LinodeAccountID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetLinodeAccountID() *uuid.UUID { return v.LinodeAccountID }
+
+// GetVultrAccountID returns ProjectDeployInput.VultrAccountID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetVultrAccountID() *uuid.UUID { return v.VultrAccountID }
+
+// GetClusterID returns ProjectDeployInput.ClusterID, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetClusterID() *uuid.UUID { return v.ClusterID }
+
+// GetRegion returns ProjectDeployInput.Region, and is useful for accessing the field via an interface.
+func (v *ProjectDeployInput) GetRegion() *string { return v.Region }
+
+type PrometheusScrapeInput struct {
+	Path string `json:"path"`
+	Port int    `json:"port"`
+}
+
+// GetPath returns PrometheusScrapeInput.Path, and is useful for accessing the field via an interface.
+func (v *PrometheusScrapeInput) GetPath() string { return v.Path }
+
+// GetPort returns PrometheusScrapeInput.Port, and is useful for accessing the field via an interface.
+func (v *PrometheusScrapeInput) GetPort() int { return v.Port }
+
+type ReplicationInput struct {
+	Region    string     `json:"region"`
+	Replicas  int        `json:"replicas"`
+	ClusterID *uuid.UUID `json:"clusterID"`
+}
+
+// GetRegion returns ReplicationInput.Region, and is useful for accessing the field via an interface.
+func (v *ReplicationInput) GetRegion() string { return v.Region }
+
+// GetReplicas returns ReplicationInput.Replicas, and is useful for accessing the field via an interface.
+func (v *ReplicationInput) GetReplicas() int { return v.Replicas }
+
+// GetClusterID returns ReplicationInput.ClusterID, and is useful for accessing the field via an interface.
+func (v *ReplicationInput) GetClusterID() *uuid.UUID { return v.ClusterID }
+
+type ResourceKubernetesManifestInput struct {
+	ManifestValue *string   `json:"manifestValue"`
+	Manifests     []*string `json:"manifests"`
+	KustomizeDirs []*string `json:"kustomizeDirs"`
+}
+
+// GetManifestValue returns ResourceKubernetesManifestInput.ManifestValue, and is useful for accessing the field via an interface.
+func (v *ResourceKubernetesManifestInput) GetManifestValue() *string { return v.ManifestValue }
+
+// GetManifests returns ResourceKubernetesManifestInput.Manifests, and is useful for accessing the field via an interface.
+func (v *ResourceKubernetesManifestInput) GetManifests() []*string { return v.Manifests }
+
+// GetKustomizeDirs returns ResourceKubernetesManifestInput.KustomizeDirs, and is useful for accessing the field via an interface.
+func (v *ResourceKubernetesManifestInput) GetKustomizeDirs() []*string { return v.KustomizeDirs }
+
+type ServerlessResourcesSpecInput struct {
+	Cpu    *float64 `json:"cpu"`
+	Memory float64  `json:"memory"`
+}
+
+// GetCpu returns ServerlessResourcesSpecInput.Cpu, and is useful for accessing the field via an interface.
+func (v *ServerlessResourcesSpecInput) GetCpu() *float64 { return v.Cpu }
+
+// GetMemory returns ServerlessResourcesSpecInput.Memory, and is useful for accessing the field via an interface.
+func (v *ServerlessResourcesSpecInput) GetMemory() float64 { return v.Memory }
+
+type SyslogIntegrationInput struct {
+	Host string `json:"host"`
+	Port string `json:"port"`
+	Mode string `json:"mode"`
+}
+
+// GetHost returns SyslogIntegrationInput.Host, and is useful for accessing the field via an interface.
+func (v *SyslogIntegrationInput) GetHost() string { return v.Host }
+
+// GetPort returns SyslogIntegrationInput.Port, and is useful for accessing the field via an interface.
+func (v *SyslogIntegrationInput) GetPort() string { return v.Port }
+
+// GetMode returns SyslogIntegrationInput.Mode, and is useful for accessing the field via an interface.
+func (v *SyslogIntegrationInput) GetMode() string { return v.Mode }
+
+type TPUInput struct {
+	Type      string `json:"type"`
+	Cores     int    `json:"cores"`
+	TfVersion string `json:"tfVersion"`
+}
+
+// GetType returns TPUInput.Type, and is useful for accessing the field via an interface.
+func (v *TPUInput) GetType() string { return v.Type }
+
+// GetCores returns TPUInput.Cores, and is useful for accessing the field via an interface.
+func (v *TPUInput) GetCores() int { return v.Cores }
+
+// GetTfVersion returns TPUInput.TfVersion, and is useful for accessing the field via an interface.
+func (v *TPUInput) GetTfVersion() string { return v.TfVersion }
+
+type UpdateProjectInput struct {
+	// - v0.RepoID
+	Id                            uuid.UUID                        `json:"id"`
+	Path                          *string                          `json:"path"`
+	Name                          *string                          `json:"name"`
+	DockerImage                   *string                          `json:"dockerImage"`
+	GithubIntegration             *GitHubRepoIntegrationInput      `json:"githubIntegration"`
+	GitlabIntegration             *GitlabRepoIntegrationInput      `json:"gitlabIntegration"`
+	BuildType                     *string                          `json:"buildType"`
+	DockerfilePath                *string                          `json:"dockerfilePath"`
+	DockerfileText                *string                          `json:"dockerfileText"`
+	WorkingDirectory              *string                          `json:"workingDirectory"`
+	BuildCommand                  *string                          `json:"buildCommand"`
+	RunCommand                    *string                          `json:"runCommand"`
+	StaticPath                    *string                          `json:"staticPath"`
+	ReleaseCommand                *string                          `json:"releaseCommand"`
+	NodejsVersion                 *string                          `json:"nodejsVersion"`
+	PythonVersion                 *string                          `json:"pythonVersion"`
+	GolangVersion                 *string                          `json:"golangVersion"`
+	NoBuildCache                  *bool                            `json:"noBuildCache"`
+	GitSubmodules                 *GitSubmodulesType               `json:"gitSubmodules"`
+	KanikoFlags                   *KanikoFlagsInput                `json:"kanikoFlags"`
+	AlternativeImageTagTemplates  []string                         `json:"alternativeImageTagTemplates"`
+	Volumes                       *string                          `json:"volumes"`
+	Ports                         *string                          `json:"ports"`
+	Replication                   []ReplicationInput               `json:"replication"`
+	Resources                     *ContainerResourcesSpecInput     `json:"resources"`
+	BuildResources                *ContainerResourcesSpecInput     `json:"buildResources"`
+	BranchResources               *ContainerResourcesSpecInput     `json:"branchResources"`
+	ServerlessResources           *ServerlessResourcesSpecInput    `json:"serverlessResources"`
+	ReadinessProbe                *ProbeInput                      `json:"readinessProbe"`
+	LivenessProbe                 *ProbeInput                      `json:"livenessProbe"`
+	StartupProbe                  *ProbeInput                      `json:"startupProbe"`
+	Autoscaling                   *AutoscalingInput                `json:"autoscaling"`
+	PreStopSleep                  *int                             `json:"preStopSleep"`
+	TerminationGracePeriodSeconds *int                             `json:"terminationGracePeriodSeconds"`
+	PrometheusScrape              *PrometheusScrapeInput           `json:"prometheusScrape"`
+	HostNetwork                   *bool                            `json:"hostNetwork"`
+	StaticIP                      *bool                            `json:"staticIP"`
+	IamPolicies                   []string                         `json:"iamPolicies"`
+	ManualDeploy                  *bool                            `json:"manualDeploy"`
+	AutoRetry                     *bool                            `json:"autoRetry"`
+	AutoRollback                  *bool                            `json:"autoRollback"`
+	DeployStrategy                *DeployStrategy                  `json:"deployStrategy"`
+	DeployTimeoutSeconds          *int                             `json:"deployTimeoutSeconds"`
+	HelmVersion                   *string                          `json:"helmVersion"`
+	HelmValues                    *string                          `json:"helmValues"`
+	TerraformSource               *string                          `json:"terraformSource"`
+	TerraformVersion              *string                          `json:"terraformVersion"`
+	TerraformVariables            *string                          `json:"terraformVariables"`
+	Manifests                     []string                         `json:"manifests"`
+	ManifestValue                 *string                          `json:"manifestValue"`
+	Manifest                      *ResourceKubernetesManifestInput `json:"manifest"`
+	AwsIamRole                    *string                          `json:"awsIamRole"`
+	GcpServiceAccount             *string                          `json:"gcpServiceAccount"`
+	ClusterIssuerName             *string                          `json:"clusterIssuerName"`
+	LogShipper                    *LogShipperInput                 `json:"logShipper"`
+	DeployService                 *bool                            `json:"deployService"`
+	DeployJob                     *bool                            `json:"deployJob"`
+	CronJobSchedule               *string                          `json:"cronJobSchedule"`
+	ProductionBranch              *string                          `json:"productionBranch"`
+	ContainerRepository           *string                          `json:"containerRepository"`
+	ContainerCacheRepository      *string                          `json:"containerCacheRepository"`
+	ContainerRegistryID           *uuid.UUID                       `json:"containerRegistryID"`
+	NodeSelector                  *string                          `json:"nodeSelector"`
+	SecretMounts                  []KubernetesSecretMountInput     `json:"secretMounts"`
+	KubernetesCustomization       *KubernetesCustomizationInput    `json:"kubernetesCustomization"`
+	BuildCPU                      *float64                         `json:"buildCPU"`
+	BuildMemory                   *float64                         `json:"buildMemory"`
+	Cpu                           *string                          `json:"cpu"`
+	Memory                        *string                          `json:"memory"`
+	EphemeralStorage              *float64                         `json:"ephemeralStorage"`
+	Gpu                           *GPUInput                        `json:"gpu"`
+	Tpu                           *TPUInput                        `json:"tpu"`
+	Dedicated                     *bool                            `json:"dedicated"`
+	GithubInstallationID          *string                          `json:"githubInstallationID"`
+	GithubRepository              *string                          `json:"githubRepository"`
+	DeployBranch                  *bool                            `json:"deployBranch"`
+	BranchIgnore                  *string                          `json:"branchIgnore"`
+	DatadogApmEnabled             *bool                            `json:"datadogApmEnabled"`
+	PipelineClusterID             *uuid.UUID                       `json:"pipelineClusterID"`
+	DeployTarget                  *ProjectDeployInput              `json:"deployTarget"`
+}
+
+// GetId returns UpdateProjectInput.Id, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetId() uuid.UUID { return v.Id }
+
+// GetPath returns UpdateProjectInput.Path, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPath() *string { return v.Path }
+
+// GetName returns UpdateProjectInput.Name, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetName() *string { return v.Name }
+
+// GetDockerImage returns UpdateProjectInput.DockerImage, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDockerImage() *string { return v.DockerImage }
+
+// GetGithubIntegration returns UpdateProjectInput.GithubIntegration, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGithubIntegration() *GitHubRepoIntegrationInput {
+	return v.GithubIntegration
+}
+
+// GetGitlabIntegration returns UpdateProjectInput.GitlabIntegration, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGitlabIntegration() *GitlabRepoIntegrationInput {
+	return v.GitlabIntegration
+}
+
+// GetBuildType returns UpdateProjectInput.BuildType, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBuildType() *string { return v.BuildType }
+
+// GetDockerfilePath returns UpdateProjectInput.DockerfilePath, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDockerfilePath() *string { return v.DockerfilePath }
+
+// GetDockerfileText returns UpdateProjectInput.DockerfileText, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDockerfileText() *string { return v.DockerfileText }
+
+// GetWorkingDirectory returns UpdateProjectInput.WorkingDirectory, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetWorkingDirectory() *string { return v.WorkingDirectory }
+
+// GetBuildCommand returns UpdateProjectInput.BuildCommand, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBuildCommand() *string { return v.BuildCommand }
+
+// GetRunCommand returns UpdateProjectInput.RunCommand, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetRunCommand() *string { return v.RunCommand }
+
+// GetStaticPath returns UpdateProjectInput.StaticPath, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetStaticPath() *string { return v.StaticPath }
+
+// GetReleaseCommand returns UpdateProjectInput.ReleaseCommand, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetReleaseCommand() *string { return v.ReleaseCommand }
+
+// GetNodejsVersion returns UpdateProjectInput.NodejsVersion, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetNodejsVersion() *string { return v.NodejsVersion }
+
+// GetPythonVersion returns UpdateProjectInput.PythonVersion, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPythonVersion() *string { return v.PythonVersion }
+
+// GetGolangVersion returns UpdateProjectInput.GolangVersion, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGolangVersion() *string { return v.GolangVersion }
+
+// GetNoBuildCache returns UpdateProjectInput.NoBuildCache, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetNoBuildCache() *bool { return v.NoBuildCache }
+
+// GetGitSubmodules returns UpdateProjectInput.GitSubmodules, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGitSubmodules() *GitSubmodulesType { return v.GitSubmodules }
+
+// GetKanikoFlags returns UpdateProjectInput.KanikoFlags, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetKanikoFlags() *KanikoFlagsInput { return v.KanikoFlags }
+
+// GetAlternativeImageTagTemplates returns UpdateProjectInput.AlternativeImageTagTemplates, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetAlternativeImageTagTemplates() []string {
+	return v.AlternativeImageTagTemplates
+}
+
+// GetVolumes returns UpdateProjectInput.Volumes, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetVolumes() *string { return v.Volumes }
+
+// GetPorts returns UpdateProjectInput.Ports, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPorts() *string { return v.Ports }
+
+// GetReplication returns UpdateProjectInput.Replication, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetReplication() []ReplicationInput { return v.Replication }
+
+// GetResources returns UpdateProjectInput.Resources, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetResources() *ContainerResourcesSpecInput { return v.Resources }
+
+// GetBuildResources returns UpdateProjectInput.BuildResources, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBuildResources() *ContainerResourcesSpecInput {
+	return v.BuildResources
+}
+
+// GetBranchResources returns UpdateProjectInput.BranchResources, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBranchResources() *ContainerResourcesSpecInput {
+	return v.BranchResources
+}
+
+// GetServerlessResources returns UpdateProjectInput.ServerlessResources, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetServerlessResources() *ServerlessResourcesSpecInput {
+	return v.ServerlessResources
+}
+
+// GetReadinessProbe returns UpdateProjectInput.ReadinessProbe, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetReadinessProbe() *ProbeInput { return v.ReadinessProbe }
+
+// GetLivenessProbe returns UpdateProjectInput.LivenessProbe, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetLivenessProbe() *ProbeInput { return v.LivenessProbe }
+
+// GetStartupProbe returns UpdateProjectInput.StartupProbe, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetStartupProbe() *ProbeInput { return v.StartupProbe }
+
+// GetAutoscaling returns UpdateProjectInput.Autoscaling, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetAutoscaling() *AutoscalingInput { return v.Autoscaling }
+
+// GetPreStopSleep returns UpdateProjectInput.PreStopSleep, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPreStopSleep() *int { return v.PreStopSleep }
+
+// GetTerminationGracePeriodSeconds returns UpdateProjectInput.TerminationGracePeriodSeconds, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetTerminationGracePeriodSeconds() *int {
+	return v.TerminationGracePeriodSeconds
+}
+
+// GetPrometheusScrape returns UpdateProjectInput.PrometheusScrape, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPrometheusScrape() *PrometheusScrapeInput { return v.PrometheusScrape }
+
+// GetHostNetwork returns UpdateProjectInput.HostNetwork, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetHostNetwork() *bool { return v.HostNetwork }
+
+// GetStaticIP returns UpdateProjectInput.StaticIP, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetStaticIP() *bool { return v.StaticIP }
+
+// GetIamPolicies returns UpdateProjectInput.IamPolicies, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetIamPolicies() []string { return v.IamPolicies }
+
+// GetManualDeploy returns UpdateProjectInput.ManualDeploy, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetManualDeploy() *bool { return v.ManualDeploy }
+
+// GetAutoRetry returns UpdateProjectInput.AutoRetry, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetAutoRetry() *bool { return v.AutoRetry }
+
+// GetAutoRollback returns UpdateProjectInput.AutoRollback, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetAutoRollback() *bool { return v.AutoRollback }
+
+// GetDeployStrategy returns UpdateProjectInput.DeployStrategy, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployStrategy() *DeployStrategy { return v.DeployStrategy }
+
+// GetDeployTimeoutSeconds returns UpdateProjectInput.DeployTimeoutSeconds, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployTimeoutSeconds() *int { return v.DeployTimeoutSeconds }
+
+// GetHelmVersion returns UpdateProjectInput.HelmVersion, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetHelmVersion() *string { return v.HelmVersion }
+
+// GetHelmValues returns UpdateProjectInput.HelmValues, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetHelmValues() *string { return v.HelmValues }
+
+// GetTerraformSource returns UpdateProjectInput.TerraformSource, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetTerraformSource() *string { return v.TerraformSource }
+
+// GetTerraformVersion returns UpdateProjectInput.TerraformVersion, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetTerraformVersion() *string { return v.TerraformVersion }
+
+// GetTerraformVariables returns UpdateProjectInput.TerraformVariables, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetTerraformVariables() *string { return v.TerraformVariables }
+
+// GetManifests returns UpdateProjectInput.Manifests, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetManifests() []string { return v.Manifests }
+
+// GetManifestValue returns UpdateProjectInput.ManifestValue, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetManifestValue() *string { return v.ManifestValue }
+
+// GetManifest returns UpdateProjectInput.Manifest, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetManifest() *ResourceKubernetesManifestInput { return v.Manifest }
+
+// GetAwsIamRole returns UpdateProjectInput.AwsIamRole, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetAwsIamRole() *string { return v.AwsIamRole }
+
+// GetGcpServiceAccount returns UpdateProjectInput.GcpServiceAccount, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGcpServiceAccount() *string { return v.GcpServiceAccount }
+
+// GetClusterIssuerName returns UpdateProjectInput.ClusterIssuerName, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetClusterIssuerName() *string { return v.ClusterIssuerName }
+
+// GetLogShipper returns UpdateProjectInput.LogShipper, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetLogShipper() *LogShipperInput { return v.LogShipper }
+
+// GetDeployService returns UpdateProjectInput.DeployService, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployService() *bool { return v.DeployService }
+
+// GetDeployJob returns UpdateProjectInput.DeployJob, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployJob() *bool { return v.DeployJob }
+
+// GetCronJobSchedule returns UpdateProjectInput.CronJobSchedule, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetCronJobSchedule() *string { return v.CronJobSchedule }
+
+// GetProductionBranch returns UpdateProjectInput.ProductionBranch, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetProductionBranch() *string { return v.ProductionBranch }
+
+// GetContainerRepository returns UpdateProjectInput.ContainerRepository, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetContainerRepository() *string { return v.ContainerRepository }
+
+// GetContainerCacheRepository returns UpdateProjectInput.ContainerCacheRepository, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetContainerCacheRepository() *string { return v.ContainerCacheRepository }
+
+// GetContainerRegistryID returns UpdateProjectInput.ContainerRegistryID, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetContainerRegistryID() *uuid.UUID { return v.ContainerRegistryID }
+
+// GetNodeSelector returns UpdateProjectInput.NodeSelector, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetNodeSelector() *string { return v.NodeSelector }
+
+// GetSecretMounts returns UpdateProjectInput.SecretMounts, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetSecretMounts() []KubernetesSecretMountInput { return v.SecretMounts }
+
+// GetKubernetesCustomization returns UpdateProjectInput.KubernetesCustomization, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetKubernetesCustomization() *KubernetesCustomizationInput {
+	return v.KubernetesCustomization
+}
+
+// GetBuildCPU returns UpdateProjectInput.BuildCPU, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBuildCPU() *float64 { return v.BuildCPU }
+
+// GetBuildMemory returns UpdateProjectInput.BuildMemory, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBuildMemory() *float64 { return v.BuildMemory }
+
+// GetCpu returns UpdateProjectInput.Cpu, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetCpu() *string { return v.Cpu }
+
+// GetMemory returns UpdateProjectInput.Memory, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetMemory() *string { return v.Memory }
+
+// GetEphemeralStorage returns UpdateProjectInput.EphemeralStorage, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetEphemeralStorage() *float64 { return v.EphemeralStorage }
+
+// GetGpu returns UpdateProjectInput.Gpu, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGpu() *GPUInput { return v.Gpu }
+
+// GetTpu returns UpdateProjectInput.Tpu, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetTpu() *TPUInput { return v.Tpu }
+
+// GetDedicated returns UpdateProjectInput.Dedicated, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDedicated() *bool { return v.Dedicated }
+
+// GetGithubInstallationID returns UpdateProjectInput.GithubInstallationID, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGithubInstallationID() *string { return v.GithubInstallationID }
+
+// GetGithubRepository returns UpdateProjectInput.GithubRepository, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetGithubRepository() *string { return v.GithubRepository }
+
+// GetDeployBranch returns UpdateProjectInput.DeployBranch, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployBranch() *bool { return v.DeployBranch }
+
+// GetBranchIgnore returns UpdateProjectInput.BranchIgnore, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetBranchIgnore() *string { return v.BranchIgnore }
+
+// GetDatadogApmEnabled returns UpdateProjectInput.DatadogApmEnabled, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDatadogApmEnabled() *bool { return v.DatadogApmEnabled }
+
+// GetPipelineClusterID returns UpdateProjectInput.PipelineClusterID, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetPipelineClusterID() *uuid.UUID { return v.PipelineClusterID }
+
+// GetDeployTarget returns UpdateProjectInput.DeployTarget, and is useful for accessing the field via an interface.
+func (v *UpdateProjectInput) GetDeployTarget() *ProjectDeployInput { return v.DeployTarget }
+
 // __deleteRepoInput is used internally by genqlient
 type __deleteRepoInput struct {
 	Id uuid.UUID `json:"id"`
@@ -19,51 +862,55 @@ func (v *__deleteRepoInput) GetId() uuid.UUID { return v.Id }
 
 // __duplicateProjectInput is used internally by genqlient
 type __duplicateProjectInput struct {
-	Id         uuid.UUID `json:"id"`
-	GroupID    uuid.UUID `json:"groupID"`
-	SubGroupID uuid.UUID `json:"subGroupID"`
-	Name       string    `json:"name"`
+	Id         uuid.UUID  `json:"id"`
+	GroupID    *uuid.UUID `json:"groupID"`
+	SubGroupID *uuid.UUID `json:"subGroupID"`
+	Name       string     `json:"name"`
 }
 
 // GetId returns __duplicateProjectInput.Id, and is useful for accessing the field via an interface.
 func (v *__duplicateProjectInput) GetId() uuid.UUID { return v.Id }
 
 // GetGroupID returns __duplicateProjectInput.GroupID, and is useful for accessing the field via an interface.
-func (v *__duplicateProjectInput) GetGroupID() uuid.UUID { return v.GroupID }
+func (v *__duplicateProjectInput) GetGroupID() *uuid.UUID { return v.GroupID }
 
 // GetSubGroupID returns __duplicateProjectInput.SubGroupID, and is useful for accessing the field via an interface.
-func (v *__duplicateProjectInput) GetSubGroupID() uuid.UUID { return v.SubGroupID }
+func (v *__duplicateProjectInput) GetSubGroupID() *uuid.UUID { return v.SubGroupID }
 
 // GetName returns __duplicateProjectInput.Name, and is useful for accessing the field via an interface.
 func (v *__duplicateProjectInput) GetName() string { return v.Name }
 
 // __getGroupInput is used internally by genqlient
 type __getGroupInput struct {
-	Path string `json:"path"`
+	Path *string `json:"path"`
 }
 
 // GetPath returns __getGroupInput.Path, and is useful for accessing the field via an interface.
-func (v *__getGroupInput) GetPath() string { return v.Path }
+func (v *__getGroupInput) GetPath() *string { return v.Path }
+
+// __getRepoByNameInput is used internally by genqlient
+type __getRepoByNameInput struct {
+	Name *string `json:"name"`
+}
+
+// GetName returns __getRepoByNameInput.Name, and is useful for accessing the field via an interface.
+func (v *__getRepoByNameInput) GetName() *string { return v.Name }
 
 // __getRepoInput is used internally by genqlient
 type __getRepoInput struct {
-	Id uuid.UUID `json:"id"`
+	Id *uuid.UUID `json:"id"`
 }
 
 // GetId returns __getRepoInput.Id, and is useful for accessing the field via an interface.
-func (v *__getRepoInput) GetId() uuid.UUID { return v.Id }
+func (v *__getRepoInput) GetId() *uuid.UUID { return v.Id }
 
-// __updateProjectBranchInput is used internally by genqlient
-type __updateProjectBranchInput struct {
-	Id     uuid.UUID `json:"id"`
-	Branch string    `json:"branch"`
+// __updateProjectInput is used internally by genqlient
+type __updateProjectInput struct {
+	Input UpdateProjectInput `json:"input"`
 }
 
-// GetId returns __updateProjectBranchInput.Id, and is useful for accessing the field via an interface.
-func (v *__updateProjectBranchInput) GetId() uuid.UUID { return v.Id }
-
-// GetBranch returns __updateProjectBranchInput.Branch, and is useful for accessing the field via an interface.
-func (v *__updateProjectBranchInput) GetBranch() string { return v.Branch }
+// GetInput returns __updateProjectInput.Input, and is useful for accessing the field via an interface.
+func (v *__updateProjectInput) GetInput() UpdateProjectInput { return v.Input }
 
 // deleteRepoResponse is returned by deleteRepo on success.
 type deleteRepoResponse struct {
@@ -151,21 +998,42 @@ func (v *getGroupProjectEnvironmentsProjectEnvironmentReposRepo) GetName() strin
 // getGroupResponse is returned by getGroup on success.
 type getGroupResponse struct {
 	// - v0.ProjectID or v1.GroupID
-	Project getGroupProject `json:"project"`
+	Project *getGroupProject `json:"project"`
 }
 
 // GetProject returns getGroupResponse.Project, and is useful for accessing the field via an interface.
-func (v *getGroupResponse) GetProject() getGroupProject { return v.Project }
+func (v *getGroupResponse) GetProject() *getGroupProject { return v.Project }
+
+// getRepoByNameRepo includes the requested fields of the GraphQL type Repo.
+type getRepoByNameRepo struct {
+	// - v0.RepoID
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+// GetId returns getRepoByNameRepo.Id, and is useful for accessing the field via an interface.
+func (v *getRepoByNameRepo) GetId() uuid.UUID { return v.Id }
+
+// GetName returns getRepoByNameRepo.Name, and is useful for accessing the field via an interface.
+func (v *getRepoByNameRepo) GetName() string { return v.Name }
+
+// getRepoByNameResponse is returned by getRepoByName on success.
+type getRepoByNameResponse struct {
+	Repo *getRepoByNameRepo `json:"repo"`
+}
+
+// GetRepo returns getRepoByNameResponse.Repo, and is useful for accessing the field via an interface.
+func (v *getRepoByNameResponse) GetRepo() *getRepoByNameRepo { return v.Repo }
 
 // getRepoRepo includes the requested fields of the GraphQL type Repo.
 type getRepoRepo struct {
 	// - v0.RepoID
-	Id                   uuid.UUID                       `json:"id"`
-	Name                 string                          `json:"name"`
-	Owner                getRepoRepoOwnerUser            `json:"owner"`
-	Project              getRepoRepoProject              `json:"project"`
-	ProjectEnvironment   getRepoRepoProjectEnvironment   `json:"projectEnvironment"`
-	ProductionDeployment getRepoRepoProductionDeployment `json:"productionDeployment"`
+	Id                   uuid.UUID                        `json:"id"`
+	Name                 string                           `json:"name"`
+	Owner                getRepoRepoOwnerUser             `json:"owner"`
+	Project              *getRepoRepoProject              `json:"project"`
+	ProjectEnvironment   *getRepoRepoProjectEnvironment   `json:"projectEnvironment"`
+	ProductionDeployment *getRepoRepoProductionDeployment `json:"productionDeployment"`
 }
 
 // GetId returns getRepoRepo.Id, and is useful for accessing the field via an interface.
@@ -178,15 +1046,15 @@ func (v *getRepoRepo) GetName() string { return v.Name }
 func (v *getRepoRepo) GetOwner() getRepoRepoOwnerUser { return v.Owner }
 
 // GetProject returns getRepoRepo.Project, and is useful for accessing the field via an interface.
-func (v *getRepoRepo) GetProject() getRepoRepoProject { return v.Project }
+func (v *getRepoRepo) GetProject() *getRepoRepoProject { return v.Project }
 
 // GetProjectEnvironment returns getRepoRepo.ProjectEnvironment, and is useful for accessing the field via an interface.
-func (v *getRepoRepo) GetProjectEnvironment() getRepoRepoProjectEnvironment {
+func (v *getRepoRepo) GetProjectEnvironment() *getRepoRepoProjectEnvironment {
 	return v.ProjectEnvironment
 }
 
 // GetProductionDeployment returns getRepoRepo.ProductionDeployment, and is useful for accessing the field via an interface.
-func (v *getRepoRepo) GetProductionDeployment() getRepoRepoProductionDeployment {
+func (v *getRepoRepo) GetProductionDeployment() *getRepoRepoProductionDeployment {
 	return v.ProductionDeployment
 }
 
@@ -228,30 +1096,30 @@ func (v *getRepoRepoProjectEnvironment) GetName() string { return v.Name }
 
 // getRepoResponse is returned by getRepo on success.
 type getRepoResponse struct {
-	Repo getRepoRepo `json:"repo"`
+	Repo *getRepoRepo `json:"repo"`
 }
 
 // GetRepo returns getRepoResponse.Repo, and is useful for accessing the field via an interface.
-func (v *getRepoResponse) GetRepo() getRepoRepo { return v.Repo }
+func (v *getRepoResponse) GetRepo() *getRepoRepo { return v.Repo }
 
-// updateProjectBranchResponse is returned by updateProjectBranch on success.
-type updateProjectBranchResponse struct {
-	UpdateProject updateProjectBranchUpdateProjectRepo `json:"updateProject"`
+// updateProjectResponse is returned by updateProject on success.
+type updateProjectResponse struct {
+	UpdateProject updateProjectUpdateProjectRepo `json:"updateProject"`
 }
 
-// GetUpdateProject returns updateProjectBranchResponse.UpdateProject, and is useful for accessing the field via an interface.
-func (v *updateProjectBranchResponse) GetUpdateProject() updateProjectBranchUpdateProjectRepo {
+// GetUpdateProject returns updateProjectResponse.UpdateProject, and is useful for accessing the field via an interface.
+func (v *updateProjectResponse) GetUpdateProject() updateProjectUpdateProjectRepo {
 	return v.UpdateProject
 }
 
-// updateProjectBranchUpdateProjectRepo includes the requested fields of the GraphQL type Repo.
-type updateProjectBranchUpdateProjectRepo struct {
+// updateProjectUpdateProjectRepo includes the requested fields of the GraphQL type Repo.
+type updateProjectUpdateProjectRepo struct {
 	// - v0.RepoID
 	Id uuid.UUID `json:"id"`
 }
 
-// GetId returns updateProjectBranchUpdateProjectRepo.Id, and is useful for accessing the field via an interface.
-func (v *updateProjectBranchUpdateProjectRepo) GetId() uuid.UUID { return v.Id }
+// GetId returns updateProjectUpdateProjectRepo.Id, and is useful for accessing the field via an interface.
+func (v *updateProjectUpdateProjectRepo) GetId() uuid.UUID { return v.Id }
 
 // The query or mutation executed by deleteRepo.
 const deleteRepo_Operation = `
@@ -299,8 +1167,8 @@ func duplicateProject(
 	ctx context.Context,
 	client graphql.Client,
 	id uuid.UUID,
-	groupID uuid.UUID,
-	subGroupID uuid.UUID,
+	groupID *uuid.UUID,
+	subGroupID *uuid.UUID,
 	name string,
 ) (*duplicateProjectResponse, error) {
 	req := &graphql.Request{
@@ -349,7 +1217,7 @@ query getGroup ($path: String) {
 func getGroup(
 	ctx context.Context,
 	client graphql.Client,
-	path string,
+	path *string,
 ) (*getGroupResponse, error) {
 	req := &graphql.Request{
 		OpName: "getGroup",
@@ -398,7 +1266,7 @@ query getRepo ($id: UUID) {
 func getRepo(
 	ctx context.Context,
 	client graphql.Client,
-	id uuid.UUID,
+	id *uuid.UUID,
 ) (*getRepoResponse, error) {
 	req := &graphql.Request{
 		OpName: "getRepo",
@@ -421,32 +1289,66 @@ func getRepo(
 	return &data, err
 }
 
-// The query or mutation executed by updateProjectBranch.
-const updateProjectBranch_Operation = `
-mutation updateProjectBranch ($id: ID!, $branch: String) {
-	updateProject(input: {id:$id,productionBranch:$branch}) {
+// The query or mutation executed by getRepoByName.
+const getRepoByName_Operation = `
+query getRepoByName ($name: String) {
+	repo(path: $name) {
+		id
+		name
+	}
+}
+`
+
+func getRepoByName(
+	ctx context.Context,
+	client graphql.Client,
+	name *string,
+) (*getRepoByNameResponse, error) {
+	req := &graphql.Request{
+		OpName: "getRepoByName",
+		Query:  getRepoByName_Operation,
+		Variables: &__getRepoByNameInput{
+			Name: name,
+		},
+	}
+	var err error
+
+	var data getRepoByNameResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by updateProject.
+const updateProject_Operation = `
+mutation updateProject ($input: UpdateProjectInput!) {
+	updateProject(input: $input) {
 		id
 	}
 }
 `
 
-func updateProjectBranch(
+func updateProject(
 	ctx context.Context,
 	client graphql.Client,
-	id uuid.UUID,
-	branch string,
-) (*updateProjectBranchResponse, error) {
+	input UpdateProjectInput,
+) (*updateProjectResponse, error) {
 	req := &graphql.Request{
-		OpName: "updateProjectBranch",
-		Query:  updateProjectBranch_Operation,
-		Variables: &__updateProjectBranchInput{
-			Id:     id,
-			Branch: branch,
+		OpName: "updateProject",
+		Query:  updateProject_Operation,
+		Variables: &__updateProjectInput{
+			Input: input,
 		},
 	}
 	var err error
 
-	var data updateProjectBranchResponse
+	var data updateProjectResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

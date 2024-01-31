@@ -8,7 +8,10 @@ import (
 	"k8s.io/client-go/transport"
 )
 
-var NotFoundError error = fmt.Errorf("not found")
+var (
+	NotFoundError      error = fmt.Errorf("not found")
+	AlreadyExistsError error = fmt.Errorf("already exists")
+)
 
 type Client struct {
 	gql  graphql.Client

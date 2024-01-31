@@ -47,7 +47,7 @@ query getGroup($path: String) {
 }
 `
 
-	res, err := getGroup(ctx, c.gql, group)
+	res, err := getGroup(ctx, c.gql, &group)
 
 	var errList gqlerror.List
 	if errors.As(err, &errList) {
