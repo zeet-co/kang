@@ -57,6 +57,7 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 		}
 
 		if opts.Overrides[p.ID] != nil {
+			fmt.Printf("Found overrides applying to %s: parsing now\n", newName)
 			override := opts.Overrides[p.ID]
 			input, err := overrideToUpdateInput(newProjectID, override)
 			if err != nil {
@@ -64,12 +65,16 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 				continue
 			}
 
-			// fmt.Printf("Applying override stmt %s specified for project %s to %s: %#v\n", override, p.ID, newProjectID, input)
+			if input != nil {
+				fmt.Printf("Applying override stmt %s specified for project %s to %s\n", override, p.ID, newProjectID)
+				// fmt.Printf("%#v\n", input)
 
-			if err = c.zeet.UpdateProject(ctx, newProjectID, input); err != nil {
-				return errors.WithStack(errors.Wrap(err, "could not apply branch override"))
+				if err = c.zeet.UpdateProject(ctx, newProjectID, input); err != nil {
+					return errors.WithStack(errors.Wrap(err, "could not apply branch override"))
+				}
 			}
 		}
+		fmt.Printf("Done with project %s!\n", newName)
 	}
 
 	return stdErrors.Join(errs...)
@@ -80,9 +85,13 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 		Id: pID,
 	}
 
-	err := assignValues(&out, overrides)
+	err, anyFieldSet := assignValues(&out, overrides)
 	if err != nil {
 		return nil, err
+	}
+
+	if !anyFieldSet {
+		return nil, nil
 	}
 
 	return &out, nil

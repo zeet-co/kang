@@ -130,8 +130,10 @@ func getJSONTagToFieldNameMap(obj interface{}) map[string]string {
 	return tagToName
 }
 
-func assignValues(obj interface{}, values map[string]string) error {
+func assignValues(obj interface{}, values map[string]string) (error, bool) {
 	tagToName := getJSONTagToFieldNameMap(obj)
+	anyFieldSet := false
+	var err error
 
 	for key, value := range values {
 		keys := strings.Split(key, ".")
@@ -140,12 +142,13 @@ func assignValues(obj interface{}, values map[string]string) error {
 			// Nested struct
 			nestedFieldName, ok := tagToName[keys[0]]
 			if !ok {
-				return fmt.Errorf("No such json tag: %s in obj", keys[0])
+				continue
+				// return fmt.Errorf("No such json tag: %s in obj", keys[0])
 			}
 
 			nestedField := reflect.ValueOf(obj).Elem().FieldByName(nestedFieldName)
 			if !nestedField.IsValid() {
-				return fmt.Errorf("Invalid field for json tag: %s", keys[0])
+				return fmt.Errorf("Invalid field for json tag: %s", keys[0]), anyFieldSet
 			}
 
 			// Check if the nested field is a pointer to a struct
@@ -156,29 +159,31 @@ func assignValues(obj interface{}, values map[string]string) error {
 					nestedField.Set(newStruct)
 				}
 				// Recursively assign values to the nested struct
-				err := assignValues(nestedField.Interface(), map[string]string{strings.Join(keys[1:], "."): value})
+				err, anyFieldSet = assignValues(nestedField.Interface(), map[string]string{strings.Join(keys[1:], "."): value})
 				if err != nil {
-					return err
+					return err, anyFieldSet
 				}
 			} else if nestedField.Kind() == reflect.Struct {
 				// Handle non-pointer nested structs
-				err := assignValues(nestedField.Addr().Interface(), map[string]string{strings.Join(keys[1:], "."): value})
+				err, anyFieldSet = assignValues(nestedField.Addr().Interface(), map[string]string{strings.Join(keys[1:], "."): value})
 				if err != nil {
-					return err
+					return err, anyFieldSet
 				}
 			} else {
-				return fmt.Errorf("Field %s is not a struct or pointer to a struct", nestedFieldName)
+				return fmt.Errorf("Field %s is not a struct or pointer to a struct", nestedFieldName), anyFieldSet
 			}
 		} else {
 			fieldName, ok := tagToName[key]
 			if !ok {
-				return fmt.Errorf("No such json tag: %s in obj", key)
+				continue
+				// return fmt.Errorf("No such json tag: %s in obj", key)
 			}
 			err := setField(obj, fieldName, value)
 			if err != nil {
-				return err
+				return err, anyFieldSet
 			}
+			anyFieldSet = true
 		}
 	}
-	return nil
+	return nil, anyFieldSet
 }
