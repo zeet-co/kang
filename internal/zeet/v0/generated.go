@@ -151,6 +151,21 @@ const (
 	DeployTypeKubernetesUnstructured DeployType = "KUBERNETES_UNSTRUCTURED"
 )
 
+type EnvVarInput struct {
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Sealed *bool  `json:"sealed"`
+}
+
+// GetName returns EnvVarInput.Name, and is useful for accessing the field via an interface.
+func (v *EnvVarInput) GetName() string { return v.Name }
+
+// GetValue returns EnvVarInput.Value, and is useful for accessing the field via an interface.
+func (v *EnvVarInput) GetValue() string { return v.Value }
+
+// GetSealed returns EnvVarInput.Sealed, and is useful for accessing the field via an interface.
+func (v *EnvVarInput) GetSealed() *bool { return v.Sealed }
+
 type GPUInput struct {
 	Type  *string `json:"type"`
 	Count int     `json:"count"`
@@ -481,6 +496,17 @@ func (v *ServerlessResourcesSpecInput) GetCpu() *float64 { return v.Cpu }
 
 // GetMemory returns ServerlessResourcesSpecInput.Memory, and is useful for accessing the field via an interface.
 func (v *ServerlessResourcesSpecInput) GetMemory() float64 { return v.Memory }
+
+type SetRepoEnvsInput struct {
+	Id   uuid.UUID     `json:"id"`
+	Envs []EnvVarInput `json:"envs"`
+}
+
+// GetId returns SetRepoEnvsInput.Id, and is useful for accessing the field via an interface.
+func (v *SetRepoEnvsInput) GetId() uuid.UUID { return v.Id }
+
+// GetEnvs returns SetRepoEnvsInput.Envs, and is useful for accessing the field via an interface.
+func (v *SetRepoEnvsInput) GetEnvs() []EnvVarInput { return v.Envs }
 
 type SyslogIntegrationInput struct {
 	Host string `json:"host"`
@@ -904,6 +930,14 @@ type __getRepoInput struct {
 // GetId returns __getRepoInput.Id, and is useful for accessing the field via an interface.
 func (v *__getRepoInput) GetId() *uuid.UUID { return v.Id }
 
+// __updateEnvsInput is used internally by genqlient
+type __updateEnvsInput struct {
+	Input SetRepoEnvsInput `json:"input"`
+}
+
+// GetInput returns __updateEnvsInput.Input, and is useful for accessing the field via an interface.
+func (v *__updateEnvsInput) GetInput() SetRepoEnvsInput { return v.Input }
+
 // __updateProjectInput is used internally by genqlient
 type __updateProjectInput struct {
 	Input UpdateProjectInput `json:"input"`
@@ -1101,6 +1135,23 @@ type getRepoResponse struct {
 
 // GetRepo returns getRepoResponse.Repo, and is useful for accessing the field via an interface.
 func (v *getRepoResponse) GetRepo() *getRepoRepo { return v.Repo }
+
+// updateEnvsResponse is returned by updateEnvs on success.
+type updateEnvsResponse struct {
+	SetRepoEnvs updateEnvsSetRepoEnvsRepo `json:"setRepoEnvs"`
+}
+
+// GetSetRepoEnvs returns updateEnvsResponse.SetRepoEnvs, and is useful for accessing the field via an interface.
+func (v *updateEnvsResponse) GetSetRepoEnvs() updateEnvsSetRepoEnvsRepo { return v.SetRepoEnvs }
+
+// updateEnvsSetRepoEnvsRepo includes the requested fields of the GraphQL type Repo.
+type updateEnvsSetRepoEnvsRepo struct {
+	// - v0.RepoID
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns updateEnvsSetRepoEnvsRepo.Id, and is useful for accessing the field via an interface.
+func (v *updateEnvsSetRepoEnvsRepo) GetId() uuid.UUID { return v.Id }
 
 // updateProjectResponse is returned by updateProject on success.
 type updateProjectResponse struct {
@@ -1314,6 +1365,41 @@ func getRepoByName(
 	var err error
 
 	var data getRepoByNameResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by updateEnvs.
+const updateEnvs_Operation = `
+mutation updateEnvs ($input: SetRepoEnvsInput!) {
+	setRepoEnvs(input: $input) {
+		id
+	}
+}
+`
+
+func updateEnvs(
+	ctx context.Context,
+	client graphql.Client,
+	input SetRepoEnvsInput,
+) (*updateEnvsResponse, error) {
+	req := &graphql.Request{
+		OpName: "updateEnvs",
+		Query:  updateEnvs_Operation,
+		Variables: &__updateEnvsInput{
+			Input: input,
+		},
+	}
+	var err error
+
+	var data updateEnvsResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

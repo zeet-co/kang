@@ -85,6 +85,10 @@ func (c *Client) UpdateProject(ctx context.Context, projectID uuid.UUID, input *
 	return c.v0Client.UpdateProject(ctx, projectID, input)
 }
 
+func (c *Client) UpdateEnvs(ctx context.Context, projectID uuid.UUID, input map[string]string) error {
+	return c.v0Client.UpdateEnvs(ctx, projectID, input)
+}
+
 func (c *Client) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	return c.v0Client.DeleteProject(ctx, id)
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	stdErrors "errors"
 
@@ -59,20 +60,7 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 		if opts.Overrides[p.ID] != nil {
 			fmt.Printf("Found overrides applying to %s: parsing now\n", newName)
 			override := opts.Overrides[p.ID]
-			input, err := overrideToUpdateInput(newProjectID, override)
-			if err != nil {
-				errs[i] = errors.WithStack(errors.Wrap(err, fmt.Sprintf("could not parse override %s", override)))
-				continue
-			}
-
-			if input != nil {
-				fmt.Printf("Applying override stmt %s specified for project %s to %s\n", override, p.ID, newProjectID)
-				// fmt.Printf("%#v\n", input)
-
-				if err = c.zeet.UpdateProject(ctx, newProjectID, input); err != nil {
-					return errors.WithStack(errors.Wrap(err, "could not apply branch override"))
-				}
-			}
+			errs[i] = c.applyOverrides(ctx, newProjectID, override)
 		}
 		fmt.Printf("Done with project %s!\n", newName)
 	}
@@ -85,7 +73,9 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 		Id: pID,
 	}
 
+	//TODO handle ref to symbolic value in another project
 	err, anyFieldSet := assignValues(&out, overrides)
+
 	if err != nil {
 		return nil, err
 	}
@@ -95,4 +85,44 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 	}
 
 	return &out, nil
+}
+
+func (c *Controller) applyOverrides(ctx context.Context, newProjectID uuid.UUID, override map[string]string) error {
+	updateInput, err := overrideToUpdateInput(newProjectID, override)
+	if err != nil {
+		return errors.WithStack(errors.Wrap(err, fmt.Sprintf("could not parse override %s", override)))
+	}
+
+	if updateInput != nil {
+		fmt.Printf("Applying override stmt %s to %s\n", override, newProjectID)
+		// fmt.Printf("%#v\n", updateInput)
+
+		if err = c.zeet.UpdateProject(ctx, newProjectID, updateInput); err != nil {
+			return errors.WithStack(errors.Wrap(err, "could not apply config overrides"))
+		}
+	}
+
+	envs, envPresent := checkOverridesForEnvs(override)
+	if envPresent {
+		fmt.Printf("Applying env overrides to %s: %s\n", newProjectID, envs)
+		if err = c.zeet.UpdateEnvs(ctx, newProjectID, envs); err != nil {
+			return errors.WithStack(errors.Wrap(err, "could not apply env var override"))
+		}
+	}
+
+	return nil
+}
+
+func checkOverridesForEnvs(override map[string]string) (map[string]string, bool) {
+	out := make(map[string]string)
+	isEnvPresent := false
+
+	for k, v := range override {
+		if strings.HasPrefix(k, "env.") {
+			out[k[4:]] = v
+			isEnvPresent = true
+		}
+	}
+
+	return out, isEnvPresent
 }
