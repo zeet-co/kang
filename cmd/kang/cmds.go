@@ -51,10 +51,10 @@ var startEnvironmentCmd = &cobra.Command{
 		overrides := parseOverrides(overridesInput)
 
 		return kang.StartEnvironment(controller.StartEnvironmentOpts{
-			TeamID:                 cfg.ZeetTeamID,
-			ProjectBranchOverrides: overrides,
-			EnvName:                envName,
-			ProjectIDs:             validIDs,
+			TeamID:     cfg.ZeetTeamID,
+			Overrides:  overrides,
+			EnvName:    envName,
+			ProjectIDs: validIDs,
 		})
 	},
 }
@@ -109,18 +109,22 @@ var commentCmd = &cobra.Command{
 	},
 }
 
-func parseOverrides(pairs []string) map[uuid.UUID]string {
+func parseOverrides(stmts []string) map[uuid.UUID]map[string]string {
+	// Each stmt is expected to be of format uuid:field:value
 
-	output := make(map[uuid.UUID]string)
+	output := make(map[uuid.UUID]map[string]string)
 
-	for _, pair := range pairs {
-		kv := strings.SplitN(pair, ":", 2)
-		if len(kv) == 2 {
-			if id, err := uuid.Parse(kv[0]); err == nil {
-				output[id] = kv[1]
+	for _, stmt := range stmts {
+		splitStmt := strings.SplitN(stmt, ":", 3)
+		if len(splitStmt) == 3 || len(splitStmt) == 4 {
+			if id, err := uuid.Parse(splitStmt[0]); err == nil {
+				if output[id] == nil {
+					output[id] = make(map[string]string)
+				}
+				output[id][splitStmt[1]] = splitStmt[2]
 			}
 		} else {
-			fmt.Println("Invalid key-value pair:", pair)
+			fmt.Println("Invalid override; must be of format id:key:value. offending stmt:", stmt)
 		}
 	}
 	return output
@@ -136,7 +140,7 @@ func init() {
 	startEnvironmentCmd.Flags().StringSlice("ids", []string{}, "Specify a comma-seperated list of Zeet Project IDs")
 	startEnvironmentCmd.MarkFlagRequired("ids")
 
-	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : Branch combos that you would like to override from the normal Production Branch of each Project. Format: project_id:branch,proj..")
+	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : field : value combos that you would like to override. Format: project_id:field:value,proj.. Example: 1c6ea878-f92e-435e-a849-7bccfe7c6e5a:branch:feature-1")
 
 	commentCmd.Flags().String("repo", "", "Github Repo that will be commented on")
 	commentCmd.MarkFlagRequired("repo")

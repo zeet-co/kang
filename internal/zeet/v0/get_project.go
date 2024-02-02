@@ -7,20 +7,20 @@ import (
 )
 
 type Deployment struct {
-	ID        uuid.UUID
-	Endpoints []string
+	ID        uuid.UUID `json:"id"`
+	Endpoints []string  `json:"endpoints"`
 }
 
 type Repo struct {
-	ID                   uuid.UUID
-	Name                 string
-	Owner                string
-	GroupName            string
-	SubGroupName         string
-	ProductionDeployment Deployment
+	ID                   uuid.UUID  `json:"id"`
+	Name                 string     `json:"name"`
+	Owner                string     `json:"owner"`
+	GroupName            string     `json:"groupName"`
+	SubGroupName         string     `json:"subGroupName"`
+	ProductionDeployment Deployment `json:"deployment"`
 }
 
-func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*Repo, error) {
+func (c *Client) GetRepoByID(ctx context.Context, id uuid.UUID) (*Repo, error) {
 	out := &Repo{}
 
 	_ = `# @genqlient
@@ -44,7 +44,7 @@ query getRepo($id: UUID) {
   }
 }
 `
-	res, err := getRepo(ctx, c.gql, id)
+	res, err := getRepo(ctx, c.gql, &id)
 
 	out = &Repo{
 		ID:           res.Repo.Id,
@@ -59,4 +59,23 @@ query getRepo($id: UUID) {
 	}
 
 	return out, err
+}
+
+func (c *Client) GetRepoByName(ctx context.Context, name string) (uuid.UUID, error) {
+
+	_ = `# @genqlient
+query getRepoByName($name: String) {
+  repo(path: $name) {
+    id
+		name
+  }
+}
+`
+	res, err := getRepoByName(ctx, c.gql, &name)
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return res.Repo.Id, nil
 }

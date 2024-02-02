@@ -26,8 +26,12 @@ func New(token string) *Client {
 	}
 }
 
-func (c *Client) GetRepo(ctx context.Context, id uuid.UUID) (*v0.Repo, error) {
-	return c.v0Client.GetRepo(ctx, id)
+func (c *Client) GetRepoByID(ctx context.Context, id uuid.UUID) (*v0.Repo, error) {
+	return c.v0Client.GetRepoByID(ctx, id)
+}
+
+func (c *Client) GetRepoByName(ctx context.Context, name string) (uuid.UUID, error) {
+	return c.v0Client.GetRepoByName(ctx, name)
 }
 
 func (c *Client) GetGroup(ctx context.Context, group string) (*v0.GetSubGroupsForGroupResp, error) {
@@ -77,8 +81,12 @@ func (c *Client) DuplicateProject(ctx context.Context, projectID, groupID, subGr
 	return c.v0Client.DuplicateProject(ctx, projectID, groupID, subGroupID, newName)
 }
 
-func (c *Client) UpdateProjectBranch(ctx context.Context, projectID uuid.UUID, branch string) error {
-	return c.v0Client.UpdateProjectBranch(ctx, projectID, branch)
+func (c *Client) UpdateProject(ctx context.Context, projectID uuid.UUID, input *v0.UpdateProjectInput) error {
+	return c.v0Client.UpdateProject(ctx, projectID, input)
+}
+
+func (c *Client) UpdateEnvs(ctx context.Context, projectID uuid.UUID, input map[string]string) error {
+	return c.v0Client.UpdateEnvs(ctx, projectID, input)
 }
 
 func (c *Client) DeleteProject(ctx context.Context, id uuid.UUID) error {
@@ -100,7 +108,7 @@ func (c *Client) GetProjectsByID(ctx context.Context, projectIDs []uuid.UUID) ([
 		i := i
 		eg.Go(func() error {
 			defer wg.Done()
-			repo, err := c.GetRepo(ctx, id)
+			repo, err := c.GetRepoByID(ctx, id)
 			if err != nil {
 				return err
 			}

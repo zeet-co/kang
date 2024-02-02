@@ -7,6 +7,6 @@ import (
 )
 
 func (c *Controller) CheckProjectExists(id uuid.UUID) bool {
-	_, err := c.zeet.GetRepo(context.Background(), id)
+	_, err := c.zeet.GetRepoByID(context.Background(), id)
 	return err == nil
 }
