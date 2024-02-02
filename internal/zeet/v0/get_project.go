@@ -7,17 +7,17 @@ import (
 )
 
 type Deployment struct {
-	ID        uuid.UUID
-	Endpoints []string
+	ID        uuid.UUID `json:"id"`
+	Endpoints []string  `json:"endpoints"`
 }
 
 type Repo struct {
-	ID                   uuid.UUID
-	Name                 string
-	Owner                string
-	GroupName            string
-	SubGroupName         string
-	ProductionDeployment Deployment
+	ID                   uuid.UUID  `json:"id"`
+	Name                 string     `json:"name"`
+	Owner                string     `json:"owner"`
+	GroupName            string     `json:"groupName"`
+	SubGroupName         string     `json:"subGroupName"`
+	ProductionDeployment Deployment `json:"deployment"`
 }
 
 func (c *Client) GetRepoByID(ctx context.Context, id uuid.UUID) (*Repo, error) {

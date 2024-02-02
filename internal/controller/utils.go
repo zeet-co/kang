@@ -4,6 +4,7 @@ package controller
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -88,39 +89,13 @@ func setField(obj interface{}, name, value string) error {
 	return nil
 }
 
-// func setField(obj interface{}, name string, value string) error {
-// structValue := reflect.ValueOf(obj).Elem()
-// fieldValue := structValue.FieldByName(name)
-
-// if !fieldValue.IsValid() {
-// return fmt.Errorf("No such field: %s in obj", name)
-// }
-
-// if !fieldValue.CanSet() {
-// return fmt.Errorf("Cannot set %s field value", name)
-// }
-
-// fieldType := fieldValue.Type()
-// switch fieldType.Kind() {
-// case reflect.String:
-// fieldValue.SetString(value)
-// case reflect.Int:
-// intValue, err := strconv.Atoi(value)
-// if err != nil {
-// return err
-// }
-// fieldValue.SetInt(int64(intValue))
-// // Add more cases here for other types as needed
-// default:
-// return fmt.Errorf("Unsupported field type %s", fieldType)
-// }
-// return nil
-// }
-
 func getJSONTagToFieldNameMap(obj interface{}) map[string]string {
 	tagToName := make(map[string]string)
-	val := reflect.ValueOf(obj).Elem()
-	for i := 0; i < val.NumField(); i++ {
+	val := reflect.ValueOf(obj)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	for i := 0; i < val.Type().NumField(); i++ {
 		field := val.Type().Field(i)
 		jsonTag := field.Tag.Get("json")
 		if jsonTag != "" {
@@ -186,4 +161,61 @@ func assignValues(obj interface{}, values map[string]string) (error, bool) {
 		}
 	}
 	return nil, anyFieldSet
+}
+
+// getValue returns the string representation of the value of a field in a struct
+// identified by a json tag path, or an empty string if the field does not exist.
+func getFieldNameFromJSONTag(objType reflect.Type, jsonTag string) (string, bool) {
+	for i := 0; i < objType.NumField(); i++ {
+		field := objType.Field(i)
+		tag := field.Tag.Get("json")
+		if tag == jsonTag {
+			return field.Name, true
+		}
+	}
+	return "", false
+}
+
+func getValue(obj interface{}, jsonTagPath string) string {
+	// Regular expression to match field names and array indices
+	re := regexp.MustCompile(`(\w+)|\[(\d+)\]`)
+	matches := re.FindAllStringSubmatch(jsonTagPath, -1)
+
+	currentObj := reflect.ValueOf(obj)
+
+	for _, match := range matches {
+		// Match can be either a field name or an index
+		if match[1] != "" { // Field name
+			if currentObj.Kind() == reflect.Ptr {
+				currentObj = currentObj.Elem()
+			}
+			if currentObj.Kind() != reflect.Struct {
+				return "" // Not a struct, cannot proceed
+			}
+			tagToName := getJSONTagToFieldNameMap(currentObj.Interface())
+			fieldName, exists := tagToName[match[1]]
+			if !exists {
+				return "" // Field does not exist
+			}
+			currentObj = currentObj.FieldByName(fieldName)
+		} else if match[2] != "" { // Array index
+			index, _ := strconv.Atoi(match[2])
+			if currentObj.Kind() == reflect.Slice || currentObj.Kind() == reflect.Array {
+				if index < currentObj.Len() {
+					currentObj = currentObj.Index(index)
+				} else {
+					return "" // Index out of bounds
+				}
+			} else {
+				return "" // Not an array or slice
+			}
+		}
+	}
+
+	// Convert the final value to a string
+	if currentObj.IsValid() && currentObj.CanInterface() {
+		return fmt.Sprintf("%v", currentObj.Interface())
+	}
+
+	return ""
 }

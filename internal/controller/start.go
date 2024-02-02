@@ -19,6 +19,12 @@ type StartEnvironmentOpts struct {
 	TeamID     uuid.UUID
 }
 
+type envOverride struct {
+	key        string
+	value      string
+	isSymbolic bool
+}
+
 func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 	group := ZeetGroupName
 	subGroup := opts.EnvName
@@ -73,7 +79,6 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 		Id: pID,
 	}
 
-	//TODO handle ref to symbolic value in another project
 	err, anyFieldSet := assignValues(&out, overrides)
 
 	if err != nil {
@@ -95,7 +100,6 @@ func (c *Controller) applyOverrides(ctx context.Context, newProjectID uuid.UUID,
 
 	if updateInput != nil {
 		fmt.Printf("Applying override stmt %s to %s\n", override, newProjectID)
-		// fmt.Printf("%#v\n", updateInput)
 
 		if err = c.zeet.UpdateProject(ctx, newProjectID, updateInput); err != nil {
 			return errors.WithStack(errors.Wrap(err, "could not apply config overrides"))
@@ -104,25 +108,102 @@ func (c *Controller) applyOverrides(ctx context.Context, newProjectID uuid.UUID,
 
 	envs, envPresent := checkOverridesForEnvs(override)
 	if envPresent {
-		fmt.Printf("Applying env overrides to %s: %s\n", newProjectID, envs)
-		if err = c.zeet.UpdateEnvs(ctx, newProjectID, envs); err != nil {
-			return errors.WithStack(errors.Wrap(err, "could not apply env var override"))
+
+		envsToSet := map[string]string{}
+		symbolicEnvs := map[string]string{}
+
+		for _, e := range envs {
+			if e.isSymbolic {
+				symbolicEnvs[e.key] = e.value
+			} else {
+				envsToSet[e.key] = e.value
+			}
+		}
+
+		if err = c.addSymbolicEnvs(ctx, newProjectID, envsToSet, symbolicEnvs); err != nil {
+			fmt.Printf("Failed to resolve references to other projects' outputs: %s\n", err)
+		}
+
+		if len(envsToSet) > 0 {
+			fmt.Printf("Applying env overrides to %s: %v\n", newProjectID, envsToSet)
+			if err = c.zeet.UpdateEnvs(ctx, newProjectID, envsToSet); err != nil {
+				return errors.WithStack(errors.Wrap(err, "could not apply env var override"))
+			}
 		}
 	}
 
 	return nil
 }
 
-func checkOverridesForEnvs(override map[string]string) (map[string]string, bool) {
-	out := make(map[string]string)
+func checkOverridesForEnvs(override map[string]string) ([]envOverride, bool) {
+	out := []envOverride{}
 	isEnvPresent := false
 
 	for k, v := range override {
 		if strings.HasPrefix(k, "env.") {
-			out[k[4:]] = v
+			envKey := k[4:]
+			out = append(out, envOverride{
+				key:        envKey,
+				value:      v,
+				isSymbolic: isSymbolic(v),
+			})
+
 			isEnvPresent = true
 		}
 	}
 
 	return out, isEnvPresent
+}
+
+//isSymbolic checks if the format of the env
+func isSymbolic(v string) bool {
+	split := strings.Split(v, ":")
+
+	if len(split) == 3 {
+		return false
+	}
+
+	if _, err := uuid.Parse(split[0]); err != nil {
+		return false
+	}
+
+	return true
+
+}
+
+func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID, out map[string]string, symbolicEnvs map[string]string) error {
+	projectIDs := []uuid.UUID{}
+	keyToProjectIDAndValue := map[string][]interface{}{}
+
+	for k, v := range symbolicEnvs {
+		s := strings.Split(v, ":")
+		projectID, err := uuid.Parse(s[0])
+		if err != nil {
+			return err
+		}
+		keyToProjectIDAndValue[k] = []interface{}{projectID, s[1]}
+		projectIDs = append(projectIDs, projectID)
+	}
+
+	projects, err := c.zeet.GetProjectsByID(ctx, projectIDs)
+	if err != nil {
+		return err
+	}
+
+	projectsByID := make(map[uuid.UUID]*v0.Repo, len(projects))
+	for _, p := range projects {
+		projectsByID[p.ID] = p
+	}
+
+	for k := range symbolicEnvs {
+
+		pID := keyToProjectIDAndValue[k][0].(uuid.UUID)
+		field := keyToProjectIDAndValue[k][1].(string)
+
+		p := projectsByID[pID]
+		foundValue := getValue(*p, field)
+		out[k] = foundValue
+	}
+
+	return nil
 }

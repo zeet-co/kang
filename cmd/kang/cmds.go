@@ -116,7 +116,7 @@ func parseOverrides(stmts []string) map[uuid.UUID]map[string]string {
 
 	for _, stmt := range stmts {
 		splitStmt := strings.SplitN(stmt, ":", 3)
-		if len(splitStmt) == 3 {
+		if len(splitStmt) == 3 || len(splitStmt) == 4 {
 			if id, err := uuid.Parse(splitStmt[0]); err == nil {
 				if output[id] == nil {
 					output[id] = make(map[string]string)
