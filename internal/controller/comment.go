@@ -21,6 +21,10 @@ func (c *Controller) CommentGithub(ctx context.Context, prNumber int, repo, toke
 		return err
 	}
 
+	if projectIDs == nil {
+		return nil
+	}
+
 	client, err := newGitHubAPIClient(ctx, token, "https://api.github.com", nil)
 
 	if err != nil {
