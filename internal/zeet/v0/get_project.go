@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type Deployment struct {
@@ -45,6 +46,9 @@ query getRepo($id: UUID) {
 }
 `
 	res, err := getRepo(ctx, c.gql, &id)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	out = &Repo{
 		ID:           res.Repo.Id,
