@@ -2,6 +2,7 @@ package zeet
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -39,13 +40,12 @@ func (c *Client) GetGroup(ctx context.Context, group string) (*v0.GetSubGroupsFo
 
 }
 
-func (c *Client) EnsureGroupsExist(group, subgroup string, teamID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
+func (c *Client) EnsureGroupsExist(ctx context.Context, teamName, group, subgroup string, teamID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
 
-	ctx := context.Background()
 	groupID := uuid.Nil
 	subGroupID := uuid.Nil
 
-	resp, err := c.GetGroup(ctx, group)
+	resp, err := c.GetGroup(ctx, fmt.Sprintf("%s/%s", teamName, group))
 
 	if err == nil {
 		groupID = resp.ID
@@ -58,19 +58,21 @@ func (c *Client) EnsureGroupsExist(group, subgroup string, teamID uuid.UUID) (uu
 		}
 
 	} else if err == v0.NotFoundError {
+		fmt.Printf("Group %s does not exist; creating now\n", group)
 		// create group
-		groupID, err = c.v1Client.CreateGroup(context.Background(), group, teamID)
+		groupID, err = c.v1Client.CreateGroup(ctx, group, teamID)
 		if err != nil {
-			return uuid.Nil, uuid.Nil, err
+			return uuid.Nil, uuid.Nil, errors.Wrap(err, "could not create group")
 		}
 	} else {
-		return uuid.Nil, uuid.Nil, err
+		return uuid.Nil, uuid.Nil, errors.Wrap(err, "could not check if group exists")
 	}
 
 	if subGroupID == uuid.Nil {
+		fmt.Printf("Subgroup %s does not exist; creating now\n", subgroup)
 		subGroupID, err = c.v1Client.CreateSubGroup(ctx, subgroup, groupID, teamID)
 		if err != nil {
-			return uuid.Nil, uuid.Nil, err
+			return uuid.Nil, uuid.Nil, errors.Wrap(err, "could not create subgroup")
 		}
 	}
 
@@ -126,4 +128,8 @@ func (c *Client) GetProjectsByID(ctx context.Context, projectIDs []uuid.UUID) ([
 	}
 
 	return projects, nil
+}
+
+func (c *Client) GetTeamName(ctx context.Context, teamID uuid.UUID) (*string, error) {
+	return c.v0Client.GetTeamName(ctx, teamID)
 }

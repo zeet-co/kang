@@ -26,15 +26,20 @@ type envOverride struct {
 }
 
 func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
+	ctx := context.Background()
+
+	teamName, err := c.zeet.GetTeamName(ctx, opts.TeamID)
+	if err != nil {
+		return errors.WithStack(errors.Wrap(err, "could not fetch team"))
+	}
+
 	group := ZeetGroupName
 	subGroup := opts.EnvName
 
-	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(group, subGroup, opts.TeamID)
+	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(ctx, *teamName, group, subGroup, opts.TeamID)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, "could not ensure group / subgroup"))
 	}
-
-	ctx := context.Background()
 
 	projects, err := c.zeet.GetProjectsByID(ctx, opts.ProjectIDs)
 	if err != nil {

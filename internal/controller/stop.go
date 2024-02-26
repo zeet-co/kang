@@ -10,9 +10,14 @@ import (
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 )
 
-func (c *Controller) StopEnvironment(ctx context.Context, envName string) error {
+func (c *Controller) StopEnvironment(ctx context.Context, envName string, teamID uuid.UUID) error {
 
-	groupName := ZeetGroupName
+	teamName, err := c.zeet.GetTeamName(ctx, teamID)
+	if err != nil {
+		return pkgErrors.WithStack(err)
+	}
+
+	groupName := fmt.Sprintf("%s/%s", *teamName, ZeetGroupName)
 	subGroup := envName
 
 	fmt.Printf("Stopping environment located in %s/%s\n", groupName, subGroup)

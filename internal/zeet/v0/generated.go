@@ -930,6 +930,14 @@ type __getRepoInput struct {
 // GetId returns __getRepoInput.Id, and is useful for accessing the field via an interface.
 func (v *__getRepoInput) GetId() *uuid.UUID { return v.Id }
 
+// __getTeamInput is used internally by genqlient
+type __getTeamInput struct {
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns __getTeamInput.Id, and is useful for accessing the field via an interface.
+func (v *__getTeamInput) GetId() uuid.UUID { return v.Id }
+
 // __updateEnvsInput is used internally by genqlient
 type __updateEnvsInput struct {
 	Input SetRepoEnvsInput `json:"input"`
@@ -1135,6 +1143,26 @@ type getRepoResponse struct {
 
 // GetRepo returns getRepoResponse.Repo, and is useful for accessing the field via an interface.
 func (v *getRepoResponse) GetRepo() *getRepoRepo { return v.Repo }
+
+// getTeamResponse is returned by getTeam on success.
+type getTeamResponse struct {
+	User getTeamUser `json:"user"`
+}
+
+// GetUser returns getTeamResponse.User, and is useful for accessing the field via an interface.
+func (v *getTeamResponse) GetUser() getTeamUser { return v.User }
+
+// getTeamUser includes the requested fields of the GraphQL type User.
+type getTeamUser struct {
+	Id    uuid.UUID `json:"id"`
+	Login string    `json:"login"`
+}
+
+// GetId returns getTeamUser.Id, and is useful for accessing the field via an interface.
+func (v *getTeamUser) GetId() uuid.UUID { return v.Id }
+
+// GetLogin returns getTeamUser.Login, and is useful for accessing the field via an interface.
+func (v *getTeamUser) GetLogin() string { return v.Login }
 
 // updateEnvsResponse is returned by updateEnvs on success.
 type updateEnvsResponse struct {
@@ -1365,6 +1393,42 @@ func getRepoByName(
 	var err error
 
 	var data getRepoByNameResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by getTeam.
+const getTeam_Operation = `
+query getTeam ($id: ID!) {
+	user(id: $id) {
+		id
+		login
+	}
+}
+`
+
+func getTeam(
+	ctx context.Context,
+	client graphql.Client,
+	id uuid.UUID,
+) (*getTeamResponse, error) {
+	req := &graphql.Request{
+		OpName: "getTeam",
+		Query:  getTeam_Operation,
+		Variables: &__getTeamInput{
+			Id: id,
+		},
+	}
+	var err error
+
+	var data getTeamResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

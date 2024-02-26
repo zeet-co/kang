@@ -80,7 +80,7 @@ var stopEnvironmentCmd = &cobra.Command{
 			return err
 		}
 
-		return kang.StopEnvironment(ctx, envName)
+		return kang.StopEnvironment(ctx, envName, cfg.ZeetTeamID)
 	},
 }
 
@@ -110,7 +110,8 @@ var commentCmd = &cobra.Command{
 }
 
 func parseOverrides(stmts []string) map[uuid.UUID]map[string]string {
-	// Each stmt is expected to be of format uuid:field:value
+	// Each stmt is expected to be of format uuid:field:value,stmt..
+	// TODO improve this format to be compatible with lists and dicts which may include the `,` character
 
 	output := make(map[uuid.UUID]map[string]string)
 
