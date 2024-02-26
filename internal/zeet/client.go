@@ -130,6 +130,10 @@ func (c *Client) GetProjectsByID(ctx context.Context, projectIDs []uuid.UUID) ([
 	return projects, nil
 }
 
+func (c *Client) GetClusterByID(ctx context.Context, clusterID, teamID uuid.UUID) (*v0.Cluster, error) {
+	return c.v0Client.GetClusterByID(ctx, clusterID, teamID)
+}
+
 func (c *Client) GetTeamName(ctx context.Context, teamID uuid.UUID) (*string, error) {
 	return c.v0Client.GetTeamName(ctx, teamID)
 }

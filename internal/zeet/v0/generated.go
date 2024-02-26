@@ -906,6 +906,18 @@ func (v *__duplicateProjectInput) GetSubGroupID() *uuid.UUID { return v.SubGroup
 // GetName returns __duplicateProjectInput.Name, and is useful for accessing the field via an interface.
 func (v *__duplicateProjectInput) GetName() string { return v.Name }
 
+// __getClusterInput is used internally by genqlient
+type __getClusterInput struct {
+	UserID    uuid.UUID `json:"userID"`
+	ClusterID uuid.UUID `json:"clusterID"`
+}
+
+// GetUserID returns __getClusterInput.UserID, and is useful for accessing the field via an interface.
+func (v *__getClusterInput) GetUserID() uuid.UUID { return v.UserID }
+
+// GetClusterID returns __getClusterInput.ClusterID, and is useful for accessing the field via an interface.
+func (v *__getClusterInput) GetClusterID() uuid.UUID { return v.ClusterID }
+
 // __getGroupInput is used internally by genqlient
 type __getGroupInput struct {
 	Path *string `json:"path"`
@@ -981,6 +993,34 @@ type duplicateProjectResponse struct {
 func (v *duplicateProjectResponse) GetDuplicateProject() duplicateProjectDuplicateProjectRepo {
 	return v.DuplicateProject
 }
+
+// getClusterResponse is returned by getCluster on success.
+type getClusterResponse struct {
+	User getClusterUser `json:"user"`
+}
+
+// GetUser returns getClusterResponse.User, and is useful for accessing the field via an interface.
+func (v *getClusterResponse) GetUser() getClusterUser { return v.User }
+
+// getClusterUser includes the requested fields of the GraphQL type User.
+type getClusterUser struct {
+	Cluster *getClusterUserCluster `json:"cluster"`
+}
+
+// GetCluster returns getClusterUser.Cluster, and is useful for accessing the field via an interface.
+func (v *getClusterUser) GetCluster() *getClusterUserCluster { return v.Cluster }
+
+// getClusterUserCluster includes the requested fields of the GraphQL type Cluster.
+type getClusterUserCluster struct {
+	Id     uuid.UUID `json:"id"`
+	Region *string   `json:"region"`
+}
+
+// GetId returns getClusterUserCluster.Id, and is useful for accessing the field via an interface.
+func (v *getClusterUserCluster) GetId() uuid.UUID { return v.Id }
+
+// GetRegion returns getClusterUserCluster.Region, and is useful for accessing the field via an interface.
+func (v *getClusterUserCluster) GetRegion() *string { return v.Region }
 
 // getGroupProject includes the requested fields of the GraphQL type Project.
 type getGroupProject struct {
@@ -1263,6 +1303,46 @@ func duplicateProject(
 	var err error
 
 	var data duplicateProjectResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by getCluster.
+const getCluster_Operation = `
+query getCluster ($userID: ID!, $clusterID: UUID!) {
+	user(id: $userID) {
+		cluster(id: $clusterID) {
+			id
+			region
+		}
+	}
+}
+`
+
+func getCluster(
+	ctx context.Context,
+	client graphql.Client,
+	userID uuid.UUID,
+	clusterID uuid.UUID,
+) (*getClusterResponse, error) {
+	req := &graphql.Request{
+		OpName: "getCluster",
+		Query:  getCluster_Operation,
+		Variables: &__getClusterInput{
+			UserID:    userID,
+			ClusterID: clusterID,
+		},
+	}
+	var err error
+
+	var data getClusterResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

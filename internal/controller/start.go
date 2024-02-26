@@ -71,7 +71,7 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 		if opts.Overrides[p.ID] != nil {
 			fmt.Printf("Found overrides applying to %s: parsing now\n", newName)
 			override := opts.Overrides[p.ID]
-			errs[i] = c.applyOverrides(ctx, newProjectID, override)
+			errs[i] = c.applyOverrides(ctx, opts.TeamID, newProjectID, override)
 		}
 		fmt.Printf("Done with project %s!\n", newName)
 	}
@@ -97,7 +97,8 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 	return &out, nil
 }
 
-func (c *Controller) applyOverrides(ctx context.Context, newProjectID uuid.UUID, override map[string]string) error {
+func (c *Controller) applyOverrides(ctx context.Context, teamID, newProjectID uuid.UUID, override map[string]string) error {
+	fmt.Printf("applying overrides: %s\n", override)
 	updateInput, err := overrideToUpdateInput(newProjectID, override)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, fmt.Sprintf("could not parse override %s", override)))
@@ -137,7 +138,59 @@ func (c *Controller) applyOverrides(ctx context.Context, newProjectID uuid.UUID,
 		}
 	}
 
+	clusterIDs, clusterPresent := checkOverridesForClusters(override)
+	if clusterPresent {
+		fmt.Printf("An override is trying to deploy this project to cluster %s\n", clusterIDs)
+		clusters := make(map[uuid.UUID]*v0.Cluster)
+		for _, clusterID := range clusterIDs {
+			cluster, err := c.zeet.GetClusterByID(ctx, clusterID, teamID)
+			if err != nil {
+				//TODO handle 404
+				return errors.WithStack(errors.Wrap(err, fmt.Sprintf("could not fetch cluster %s", clusterID)))
+			}
+			clusters[cluster.ID] = cluster
+		}
+
+		newReplication := []v0.ReplicationInput{}
+		for _, cluster := range clusters {
+			newReplication = append(newReplication, v0.ReplicationInput{
+				Region:    cluster.Region,
+				Replicas:  1,
+				ClusterID: &cluster.ID,
+			})
+		}
+
+		updateObject := &v0.UpdateProjectInput{
+			Id:          newProjectID,
+			Replication: newReplication,
+		}
+
+		if err = c.zeet.UpdateProject(ctx, newProjectID, updateObject); err != nil {
+			return errors.WithStack(errors.Wrap(err, "could not apply cluster overrides"))
+		}
+	}
+
 	return nil
+}
+
+func checkOverridesForClusters(override map[string]string) ([]uuid.UUID, bool) {
+	//TODO support cluster names instead of IDs as input
+	out := []uuid.UUID{}
+	isClusterPresent := false
+
+	for k, v := range override {
+		if k == "cluster" {
+
+			clusterID, err := uuid.Parse(v)
+			if err == nil {
+				out = append(out, clusterID)
+
+				isClusterPresent = true
+			}
+		}
+	}
+
+	return out, isClusterPresent
 }
 
 func checkOverridesForEnvs(override map[string]string) ([]envOverride, bool) {
