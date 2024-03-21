@@ -18,6 +18,7 @@ func init() {
 func main() {
 
 	rootCmd.PersistentFlags().String("api-key", "", "Input your Zeet API Key. For more information see https://docs.zeet.co/graphql/")
+	rootCmd.PersistentFlags().String("group-name", "", "Customize the top-level group name for ephemeral environments to be deployed into. Default: kang")
 	rootCmd.PersistentFlags().String("team-id", "", "Input your Zeet Team ID. For more information see https://docs.zeet.co/graphql/")
 
 	rand.Seed(time.Now().UnixNano())

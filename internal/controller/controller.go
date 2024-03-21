@@ -5,10 +5,9 @@ import (
 	"github.com/zeet-co/kang/internal/zeet"
 )
 
-const ZeetGroupName = "kang"
-
 type Controller struct {
-	zeet *zeet.Client
+	zeet      *zeet.Client
+	groupName string
 }
 
 func NewController(cfg *config.Config) (*Controller, error) {
@@ -16,6 +15,7 @@ func NewController(cfg *config.Config) (*Controller, error) {
 	zeetCli := zeet.New(cfg.ZeetAPIKey)
 
 	return &Controller{
-		zeet: zeetCli,
+		zeet:      zeetCli,
+		groupName: cfg.ZeetGroupName,
 	}, nil
 }

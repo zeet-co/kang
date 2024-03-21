@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	ZeetAPIKey string
-	ZeetTeamID uuid.UUID
+	ZeetAPIKey    string
+	ZeetTeamID    uuid.UUID
+	ZeetGroupName string
 
 	DBConnectionString string
 }
@@ -19,8 +20,9 @@ type Config struct {
 func New(cmd *cobra.Command) (*Config, error) {
 
 	var (
-		apiKey string
-		teamID uuid.UUID = uuid.Nil
+		apiKey    string
+		teamID    uuid.UUID = uuid.Nil
+		groupName string    = "kang"
 	)
 
 	if envAPIKey := os.Getenv("ZEET_API_KEY"); envAPIKey != "" {
@@ -45,9 +47,15 @@ func New(cmd *cobra.Command) (*Config, error) {
 		return nil, errors.New("Missing Zeet Team ID. Set via env var ZEET_TEAM_ID or CLI --team-id")
 	}
 
+	if cliGroupName, _ := cmd.Flags().GetString("group-name"); cliGroupName != "" {
+		groupName = cliGroupName
+	}
+
 	return &Config{
-		ZeetAPIKey:         apiKey,
-		ZeetTeamID:         teamID,
+		ZeetAPIKey:    apiKey,
+		ZeetTeamID:    teamID,
+		ZeetGroupName: groupName,
+
 		DBConnectionString: getConnStr(),
 	}, nil
 }

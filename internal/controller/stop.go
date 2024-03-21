@@ -17,7 +17,7 @@ func (c *Controller) StopEnvironment(ctx context.Context, envName string, teamID
 		return pkgErrors.WithStack(err)
 	}
 
-	groupName := fmt.Sprintf("%s/%s", *teamName, ZeetGroupName)
+	groupName := fmt.Sprintf("%s/%s", *teamName, c.groupName)
 	subGroup := envName
 
 	fmt.Printf("Stopping environment located in %s/%s\n", groupName, subGroup)

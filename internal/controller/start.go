@@ -33,7 +33,7 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 		return errors.WithStack(errors.Wrap(err, "could not fetch team"))
 	}
 
-	group := ZeetGroupName
+	group := c.groupName
 	subGroup := opts.EnvName
 
 	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(ctx, *teamName, group, subGroup, opts.TeamID)
