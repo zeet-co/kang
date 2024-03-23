@@ -16,7 +16,7 @@ import (
 
 func (c *Controller) CommentGithub(ctx context.Context, prNumber int, repo, token, envName string) error {
 
-	projectIDs, err := c.getProjectsInSubGroup(ctx, ZeetGroupName, envName)
+	projectIDs, err := c.getProjectsInSubGroup(ctx, c.groupName, envName)
 	if err != nil {
 		return err
 	}

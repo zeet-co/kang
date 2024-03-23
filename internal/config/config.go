@@ -10,17 +10,21 @@ import (
 )
 
 type Config struct {
-	ZeetAPIKey string
-	ZeetTeamID uuid.UUID
+	ZeetAPIKey    string
+	ZeetTeamID    uuid.UUID
+	ZeetGroupName string
 
 	DBConnectionString string
 }
 
+const DefaultZeetGroupName = "kang"
+
 func New(cmd *cobra.Command) (*Config, error) {
 
 	var (
-		apiKey string
-		teamID uuid.UUID = uuid.Nil
+		apiKey    string
+		teamID    uuid.UUID = uuid.Nil
+		groupName string    = DefaultZeetGroupName
 	)
 
 	if envAPIKey := os.Getenv("ZEET_API_KEY"); envAPIKey != "" {
@@ -45,9 +49,19 @@ func New(cmd *cobra.Command) (*Config, error) {
 		return nil, errors.New("Missing Zeet Team ID. Set via env var ZEET_TEAM_ID or CLI --team-id")
 	}
 
+	if envGroupName := os.Getenv("ZEET_GROUP_NAME"); envGroupName != "" {
+		groupName = envGroupName
+	}
+
+	if cliGroupName, _ := cmd.Flags().GetString("group-name"); cliGroupName != "" {
+		groupName = cliGroupName
+	}
+
 	return &Config{
-		ZeetAPIKey:         apiKey,
-		ZeetTeamID:         teamID,
+		ZeetAPIKey:    apiKey,
+		ZeetTeamID:    teamID,
+		ZeetGroupName: groupName,
+
 		DBConnectionString: getConnStr(),
 	}, nil
 }
@@ -61,12 +75,15 @@ func getTeamID(cmd *cobra.Command) (uuid.UUID, error) {
 	}
 
 	if teamIDString == "" {
-
 		teamID, err := cmd.Flags().GetString("team-id")
 		if err != nil {
 			return uuid.Nil, err
 		}
 		teamIDString = teamID
+	}
+
+	if teamIDString == "" {
+		return uuid.Nil, nil
 	}
 
 	res, err := uuid.Parse(teamIDString)
