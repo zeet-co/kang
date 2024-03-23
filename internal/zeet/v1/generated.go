@@ -70,6 +70,14 @@ type __createSubGroupInput struct {
 // GetInput returns __createSubGroupInput.Input, and is useful for accessing the field via an interface.
 func (v *__createSubGroupInput) GetInput() CreateSubGroupInput { return v.Input }
 
+// __deleteSubGroupInput is used internally by genqlient
+type __deleteSubGroupInput struct {
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns __deleteSubGroupInput.Id, and is useful for accessing the field via an interface.
+func (v *__deleteSubGroupInput) GetId() uuid.UUID { return v.Id }
+
 // createGroupCreateGroup includes the requested fields of the GraphQL type Group.
 type createGroupCreateGroup struct {
 	Id uuid.UUID `json:"id"`
@@ -103,6 +111,14 @@ type createSubGroupResponse struct {
 func (v *createSubGroupResponse) GetCreateSubGroup() createSubGroupCreateSubGroup {
 	return v.CreateSubGroup
 }
+
+// deleteSubGroupResponse is returned by deleteSubGroup on success.
+type deleteSubGroupResponse struct {
+	DeleteSubGroup bool `json:"deleteSubGroup"`
+}
+
+// GetDeleteSubGroup returns deleteSubGroupResponse.DeleteSubGroup, and is useful for accessing the field via an interface.
+func (v *deleteSubGroupResponse) GetDeleteSubGroup() bool { return v.DeleteSubGroup }
 
 // The query or mutation executed by createGroup.
 const createGroup_Operation = `
@@ -163,6 +179,39 @@ func createSubGroup(
 	var err error
 
 	var data createSubGroupResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// The query or mutation executed by deleteSubGroup.
+const deleteSubGroup_Operation = `
+mutation deleteSubGroup ($id: UUID!) {
+	deleteSubGroup(id: $id)
+}
+`
+
+func deleteSubGroup(
+	ctx context.Context,
+	client graphql.Client,
+	id uuid.UUID,
+) (*deleteSubGroupResponse, error) {
+	req := &graphql.Request{
+		OpName: "deleteSubGroup",
+		Query:  deleteSubGroup_Operation,
+		Variables: &__deleteSubGroupInput{
+			Id: id,
+		},
+	}
+	var err error
+
+	var data deleteSubGroupResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

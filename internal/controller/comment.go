@@ -16,7 +16,15 @@ import (
 
 func (c *Controller) CommentGithub(ctx context.Context, prNumber int, repo, token, envName string) error {
 
-	projectIDs, err := c.getProjectsInSubGroup(ctx, c.groupName, envName)
+	group, err := c.zeet.GetGroup(ctx, c.groupName)
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	sg := findSubGroup(group, envName)
+
+	projectIDs, err := c.getProjectsInSubGroup(ctx, c.groupName, sg)
 	if err != nil {
 		return err
 	}

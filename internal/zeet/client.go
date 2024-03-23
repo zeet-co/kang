@@ -137,3 +137,7 @@ func (c *Client) GetClusterByID(ctx context.Context, clusterID, teamID uuid.UUID
 func (c *Client) GetTeamName(ctx context.Context, teamID uuid.UUID) (*string, error) {
 	return c.v0Client.GetTeamName(ctx, teamID)
 }
+
+func (c *Client) DeleteSubGroup(ctx context.Context, subGroupID uuid.UUID) error {
+	return c.v1Client.DeleteSubGroup(ctx, subGroupID)
+}
