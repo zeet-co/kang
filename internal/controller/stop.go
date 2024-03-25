@@ -24,56 +24,51 @@ func (c *Controller) StopEnvironment(ctx context.Context, envName string, teamID
 
 	errs := []error{}
 
-	ids, err := c.getProjectsInSubGroup(ctx, groupName, subGroup)
-	if err != nil {
-		return err
-	}
-
-	if ids == nil {
-		fmt.Println("No Projects found; exiting")
-		return nil
-	}
-
-	for _, id := range ids {
-		fmt.Printf("Deleting project %s\n", id)
-		if err := c.zeet.DeleteProject(context.Background(), id); err != nil {
-			errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-func (c *Controller) getProjectsInSubGroup(ctx context.Context, groupName, subGroup string) ([]uuid.UUID, error) {
-	group, err := c.zeet.GetGroup(context.Background(), groupName)
+	group, err := c.zeet.GetGroup(ctx, groupName)
 
 	if err != nil {
-		if err == v0.NotFoundError {
-			// no group/subgroup = successfully deleted, exit
-			fmt.Printf("Group %s doesn't exist\n", groupName)
-			return nil, nil
+		if err != v0.NotFoundError {
+			return pkgErrors.WithStack(err)
 		}
-		return nil, pkgErrors.WithStack(err)
+		// no group/subgroup = successfully deleted, exit
+		fmt.Printf("Group %s doesn't exist\n", groupName)
 	}
 
-	var (
-		sg *v0.SubGroup
-	)
-
-	for _, gSg := range group.SubGroups {
-		if gSg.Name == subGroup {
-			sg = &gSg
-			break
-		}
-	}
+	sg := findSubGroup(group, subGroup)
 
 	if sg == nil {
 		// no subgroup = successfully deleted, exit
 		fmt.Printf("SubGroup %s doesn't exist\n", subGroup)
-		return nil, nil
+		return nil
 	}
 
-	fmt.Printf("Found %d projects in %s/%s\n", len(sg.Projects), groupName, subGroup)
+	ids, err := c.getProjectsInSubGroup(ctx, group.Name, sg)
+	if err != nil {
+		return err
+	}
+
+	if ids != nil {
+		for _, id := range ids {
+			fmt.Printf("Deleting project %s\n", id)
+			if err := c.zeet.DeleteProject(ctx, id); err != nil {
+				errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
+			}
+		}
+
+	}
+
+	if compositeErr := errors.Join(errs...); compositeErr != nil {
+		return err
+	}
+
+	c.zeet.DeleteSubGroup(ctx, sg.ID)
+
+	return nil
+}
+
+func (c *Controller) getProjectsInSubGroup(ctx context.Context, groupName string, sg *v0.SubGroup) ([]uuid.UUID, error) {
+
+	fmt.Printf("Found %d projects in %s/%s\n", len(sg.Projects), groupName, sg.Name)
 
 	ids := make([]uuid.UUID, len(sg.Projects))
 
@@ -82,4 +77,15 @@ func (c *Controller) getProjectsInSubGroup(ctx context.Context, groupName, subGr
 	}
 
 	return ids, nil
+}
+
+func findSubGroup(group *v0.GetSubGroupsForGroupResp, subGroup string) (sg *v0.SubGroup) {
+	for _, gSg := range group.SubGroups {
+		if gSg.Name == subGroup {
+			sg = &gSg
+			break
+		}
+	}
+
+	return sg
 }
