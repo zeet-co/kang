@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/zeet-co/kang/internal/parser"
 	v0 "github.com/zeet-co/kang/internal/zeet/v0"
 )
 
@@ -36,19 +37,24 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 	group := c.groupName
 	subGroup := opts.EnvName
 
+	// Handle Group/ Sub Group creation
 	groupID, subGroupID, err := c.zeet.EnsureGroupsExist(ctx, *teamName, group, subGroup, opts.TeamID)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, "could not ensure group / subgroup"))
 	}
 
+	// Get all the projects that need to be duplicated
 	projects, err := c.zeet.GetProjectsByID(ctx, opts.ProjectIDs)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, "could not fetch project information"))
 	}
 
+	projectSuccessorMap := map[uuid.UUID]uuid.UUID{}
+
 	errs := make([]error, len(projects))
 
 	for i, p := range projects {
+		// Duplicate each of the projects passed in via --ids
 		//TODO scale down resources on branch deployments (?)
 		//TODO handle database linking
 
@@ -65,13 +71,17 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 				errs[i] = errors.WithStack(errors.Wrap(err, "could not fetch project"))
 				continue
 			}
-
 		}
+		projectSuccessorMap[p.ID] = newProjectID
+	}
 
+	for i, p := range projects {
+
+		newName := fmt.Sprintf("%s-%s", p.Name, opts.EnvName)
 		if opts.Overrides[p.ID] != nil {
 			fmt.Printf("Found overrides applying to %s: parsing now\n", newName)
 			override := opts.Overrides[p.ID]
-			errs[i] = c.applyOverrides(ctx, opts.TeamID, newProjectID, override)
+			errs[i] = c.applyOverrides(ctx, opts.TeamID, projectSuccessorMap, p.ID, override)
 		}
 		fmt.Printf("Done with project %s!\n", newName)
 	}
@@ -84,7 +94,7 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 		Id: pID,
 	}
 
-	err, anyFieldSet := assignValues(&out, overrides)
+	err, anyFieldSet := parser.AssignValues(&out, overrides)
 
 	if err != nil {
 		return nil, err
@@ -97,7 +107,8 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 	return &out, nil
 }
 
-func (c *Controller) applyOverrides(ctx context.Context, teamID, newProjectID uuid.UUID, override map[string]string) error {
+func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, projectSuccessorMap map[uuid.UUID]uuid.UUID, oldProjectID uuid.UUID, override map[string]string) error {
+	newProjectID := projectSuccessorMap[oldProjectID]
 	fmt.Printf("applying overrides: %s\n", override)
 	updateInput, err := overrideToUpdateInput(newProjectID, override)
 	if err != nil {
@@ -126,7 +137,7 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID, newProjectID uu
 			}
 		}
 
-		if err = c.addSymbolicEnvs(ctx, newProjectID, envsToSet, symbolicEnvs); err != nil {
+		if err = c.addSymbolicEnvs(ctx, newProjectID, envsToSet, symbolicEnvs, projectSuccessorMap); err != nil {
 			fmt.Printf("Failed to resolve references to other projects' outputs: %s\n", err)
 		}
 
@@ -229,7 +240,7 @@ func isSymbolic(v string) bool {
 
 }
 
-func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID, out map[string]string, symbolicEnvs map[string]string) error {
+func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID, out, symbolicEnvs map[string]string, projectSuccessorMap map[uuid.UUID]uuid.UUID) error {
 	projectIDs := []uuid.UUID{}
 	keyToProjectIDAndValue := map[string][]interface{}{}
 
@@ -239,8 +250,9 @@ func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID
 		if err != nil {
 			return err
 		}
-		keyToProjectIDAndValue[k] = []interface{}{projectID, s[1]}
-		projectIDs = append(projectIDs, projectID)
+		modernProjectID := projectSuccessorMap[projectID]
+		keyToProjectIDAndValue[k] = []interface{}{modernProjectID, s[1]}
+		projectIDs = append(projectIDs, modernProjectID)
 	}
 
 	projects, err := c.zeet.GetProjectsByID(ctx, projectIDs)
@@ -257,9 +269,9 @@ func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID
 
 		pID := keyToProjectIDAndValue[k][0].(uuid.UUID)
 		field := keyToProjectIDAndValue[k][1].(string)
-
 		p := projectsByID[pID]
-		foundValue := getValue(*p, field)
+
+		foundValue := parser.GetValue(*p, field)
 		out[k] = foundValue
 	}
 

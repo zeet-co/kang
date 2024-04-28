@@ -8,17 +8,19 @@ import (
 )
 
 type Deployment struct {
-	ID        uuid.UUID `json:"id"`
-	Endpoints []string  `json:"endpoints"`
+	ID        uuid.UUID        `json:"id"`
+	Status    DeploymentStatus `json:"status"`
+	Endpoints []string         `json:"endpoints"`
 }
 
 type Repo struct {
-	ID                   uuid.UUID  `json:"id"`
-	Name                 string     `json:"name"`
-	Owner                string     `json:"owner"`
-	GroupName            string     `json:"groupName"`
-	SubGroupName         string     `json:"subGroupName"`
-	ProductionDeployment Deployment `json:"deployment"`
+	ID                   uuid.UUID         `json:"id"`
+	Name                 string            `json:"name"`
+	Owner                string            `json:"owner"`
+	GroupName            string            `json:"groupName"`
+	SubGroupName         string            `json:"subGroupName"`
+	ProductionDeployment Deployment        `json:"deployment"`
+	DatabaseEnvs         map[string]string `json:"databaseEnvs"`
 }
 
 func (c *Client) GetRepoByID(ctx context.Context, id uuid.UUID) (*Repo, error) {
@@ -41,6 +43,11 @@ query getRepo($id: UUID) {
 		productionDeployment {
 			id
 			endpoints
+			status
+		}
+    databaseEnvs {
+			name
+			value
 		}
   }
 }
@@ -48,6 +55,11 @@ query getRepo($id: UUID) {
 	res, err := getRepo(ctx, c.gql, &id)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	dbEnvs := make(map[string]string, len(res.Repo.DatabaseEnvs))
+	for _, e := range res.Repo.DatabaseEnvs {
+		dbEnvs[e.Name] = e.Value
 	}
 
 	out = &Repo{
@@ -59,7 +71,9 @@ query getRepo($id: UUID) {
 		ProductionDeployment: Deployment{
 			ID:        res.Repo.ProductionDeployment.Id,
 			Endpoints: res.Repo.ProductionDeployment.Endpoints,
+			Status:    res.Repo.ProductionDeployment.Status,
 		},
+		DatabaseEnvs: dbEnvs,
 	}
 
 	return out, err
