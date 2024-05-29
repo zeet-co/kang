@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/zeet-co/kang/internal/config"
 
 	"github.com/zeet-co/kang/internal/controller"
@@ -131,6 +132,15 @@ func parseOverrides(stmts []string) map[uuid.UUID]map[string]string {
 	return output
 }
 
+func aliasNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	switch name {
+	case "overrides":
+		name = "override"
+		break
+	}
+	return pflag.NormalizedName(name)
+}
+
 func init() {
 	stopEnvironmentCmd.Flags().String("name", "", "Specify the name of the environment you'd like to stop")
 	stopEnvironmentCmd.MarkFlagRequired("name")
@@ -142,6 +152,7 @@ func init() {
 	startEnvironmentCmd.MarkFlagRequired("ids")
 
 	startEnvironmentCmd.Flags().StringSlice("overrides", []string{}, "Specify the Project ID : field : value combos that you would like to override. Format: project_id:field:value,proj.. Example: 1c6ea878-f92e-435e-a849-7bccfe7c6e5a:branch:feature-1")
+	startEnvironmentCmd.Flags().SetNormalizeFunc(aliasNormalizeFunc)
 
 	commentCmd.Flags().String("repo", "", "Github Repo that will be commented on")
 	commentCmd.MarkFlagRequired("repo")

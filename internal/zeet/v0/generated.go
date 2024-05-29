@@ -151,6 +151,24 @@ const (
 	DeployTypeKubernetesUnstructured DeployType = "KUBERNETES_UNSTRUCTURED"
 )
 
+type DeploymentStatus string
+
+const (
+	DeploymentStatusBuildPending      DeploymentStatus = "BUILD_PENDING"
+	DeploymentStatusBuildInProgress   DeploymentStatus = "BUILD_IN_PROGRESS"
+	DeploymentStatusBuildFailed       DeploymentStatus = "BUILD_FAILED"
+	DeploymentStatusBuildSucceeded    DeploymentStatus = "BUILD_SUCCEEDED"
+	DeploymentStatusDeployPending     DeploymentStatus = "DEPLOY_PENDING"
+	DeploymentStatusDeployInProgress  DeploymentStatus = "DEPLOY_IN_PROGRESS"
+	DeploymentStatusReleaseInProgress DeploymentStatus = "RELEASE_IN_PROGRESS"
+	DeploymentStatusDeployFailed      DeploymentStatus = "DEPLOY_FAILED"
+	DeploymentStatusDeploySucceeded   DeploymentStatus = "DEPLOY_SUCCEEDED"
+	DeploymentStatusBuildAborted      DeploymentStatus = "BUILD_ABORTED"
+	DeploymentStatusDeployStopped     DeploymentStatus = "DEPLOY_STOPPED"
+	DeploymentStatusDeployHealhty     DeploymentStatus = "DEPLOY_HEALHTY"
+	DeploymentStatusDeployCrashing    DeploymentStatus = "DEPLOY_CRASHING"
+)
+
 type EnvVarInput struct {
 	Name   string `json:"name"`
 	Value  string `json:"value"`
@@ -1116,6 +1134,7 @@ type getRepoRepo struct {
 	Project              *getRepoRepoProject              `json:"project"`
 	ProjectEnvironment   *getRepoRepoProjectEnvironment   `json:"projectEnvironment"`
 	ProductionDeployment *getRepoRepoProductionDeployment `json:"productionDeployment"`
+	DatabaseEnvs         []getRepoRepoDatabaseEnvsEnvVar  `json:"databaseEnvs"`
 }
 
 // GetId returns getRepoRepo.Id, and is useful for accessing the field via an interface.
@@ -1140,6 +1159,21 @@ func (v *getRepoRepo) GetProductionDeployment() *getRepoRepoProductionDeployment
 	return v.ProductionDeployment
 }
 
+// GetDatabaseEnvs returns getRepoRepo.DatabaseEnvs, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetDatabaseEnvs() []getRepoRepoDatabaseEnvsEnvVar { return v.DatabaseEnvs }
+
+// getRepoRepoDatabaseEnvsEnvVar includes the requested fields of the GraphQL type EnvVar.
+type getRepoRepoDatabaseEnvsEnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// GetName returns getRepoRepoDatabaseEnvsEnvVar.Name, and is useful for accessing the field via an interface.
+func (v *getRepoRepoDatabaseEnvsEnvVar) GetName() string { return v.Name }
+
+// GetValue returns getRepoRepoDatabaseEnvsEnvVar.Value, and is useful for accessing the field via an interface.
+func (v *getRepoRepoDatabaseEnvsEnvVar) GetValue() string { return v.Value }
+
 // getRepoRepoOwnerUser includes the requested fields of the GraphQL type User.
 type getRepoRepoOwnerUser struct {
 	Login string `json:"login"`
@@ -1150,8 +1184,9 @@ func (v *getRepoRepoOwnerUser) GetLogin() string { return v.Login }
 
 // getRepoRepoProductionDeployment includes the requested fields of the GraphQL type Deployment.
 type getRepoRepoProductionDeployment struct {
-	Id        uuid.UUID `json:"id"`
-	Endpoints []string  `json:"endpoints"`
+	Id        uuid.UUID        `json:"id"`
+	Endpoints []string         `json:"endpoints"`
+	Status    DeploymentStatus `json:"status"`
 }
 
 // GetId returns getRepoRepoProductionDeployment.Id, and is useful for accessing the field via an interface.
@@ -1159,6 +1194,9 @@ func (v *getRepoRepoProductionDeployment) GetId() uuid.UUID { return v.Id }
 
 // GetEndpoints returns getRepoRepoProductionDeployment.Endpoints, and is useful for accessing the field via an interface.
 func (v *getRepoRepoProductionDeployment) GetEndpoints() []string { return v.Endpoints }
+
+// GetStatus returns getRepoRepoProductionDeployment.Status, and is useful for accessing the field via an interface.
+func (v *getRepoRepoProductionDeployment) GetStatus() DeploymentStatus { return v.Status }
 
 // getRepoRepoProject includes the requested fields of the GraphQL type Project.
 type getRepoRepoProject struct {
@@ -1417,6 +1455,11 @@ query getRepo ($id: UUID) {
 		productionDeployment {
 			id
 			endpoints
+			status
+		}
+		databaseEnvs {
+			name
+			value
 		}
 	}
 }

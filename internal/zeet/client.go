@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -100,21 +101,39 @@ func (c *Client) GetProjectsByID(ctx context.Context, projectIDs []uuid.UUID) ([
 	projects := make([]*v0.Repo, len(projectIDs))
 
 	var wg sync.WaitGroup
-	// var repos []*Repo
 	eg := new(errgroup.Group)
 
-	// Assuming you have a slice of inputs for GetRepo
+	terminalStates := map[v0.DeploymentStatus]bool{
+		v0.DeploymentStatusBuildAborted:    true,
+		v0.DeploymentStatusBuildFailed:     true,
+		v0.DeploymentStatusBuildSucceeded:  true,
+		v0.DeploymentStatusDeployCrashing:  true,
+		v0.DeploymentStatusDeployFailed:    true,
+		v0.DeploymentStatusDeployHealhty:   true,
+		v0.DeploymentStatusDeployStopped:   true,
+		v0.DeploymentStatusDeploySucceeded: true,
+	}
+
 	for i, id := range projectIDs {
 		wg.Add(1)
 		id := id // capture range variable
 		i := i
 		eg.Go(func() error {
 			defer wg.Done()
-			repo, err := c.GetRepoByID(ctx, id)
-			if err != nil {
-				return err
+			var repo *v0.Repo
+			var err error
+			for {
+				repo, err = c.GetRepoByID(ctx, id)
+				if err != nil {
+					return err
+				}
+				if _, exists := terminalStates[repo.ProductionDeployment.Status]; exists {
+					// fmt.Printf("Project %s is in a terminal state: %s\n", id, repo.ProductionDeployment.Status)
+					break
+				}
+				fmt.Printf("Project %s is in a transient state, polling until complete\n", id)
+				time.Sleep(10 * time.Second)
 			}
-			// Use a mutex or other synchronization method if needed
 			projects[i] = repo
 			return nil
 		})

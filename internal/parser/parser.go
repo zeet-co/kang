@@ -1,5 +1,5 @@
-//thanks chatGPT
-package controller
+// thanks chatGPT
+package parser
 
 import (
 	"fmt"
@@ -105,7 +105,73 @@ func getJSONTagToFieldNameMap(obj interface{}) map[string]string {
 	return tagToName
 }
 
-func assignValues(obj interface{}, values map[string]string) (error, bool) {
+// getValue returns the string representation of the value of a field in a struct
+// identified by a json tag path, or an empty string if the field does not exist.
+func getFieldNameFromJSONTag(objType reflect.Type, jsonTag string) (string, bool) {
+	for i := 0; i < objType.NumField(); i++ {
+		field := objType.Field(i)
+		tag := field.Tag.Get("json")
+		if tag == jsonTag {
+			return field.Name, true
+		}
+	}
+	return "", false
+}
+
+func GetValue(obj interface{}, jsonTagPath string) string {
+	// Regular expression to match field names and array indices
+	re := regexp.MustCompile(`(\w+)|\[(\d+)\]`)
+	matches := re.FindAllStringSubmatch(jsonTagPath, -1)
+
+	currentObj := reflect.ValueOf(obj)
+
+	for _, match := range matches {
+		// Match can be either a field name or an index
+		if match[1] != "" { // Field name
+			if currentObj.Kind() == reflect.Ptr {
+				currentObj = currentObj.Elem()
+			}
+			if currentObj.Kind() == reflect.Struct {
+				tagToName := getJSONTagToFieldNameMap(currentObj.Interface())
+				fieldName, exists := tagToName[match[1]]
+				if !exists {
+					return "" // Field does not exist
+				}
+				currentObj = currentObj.FieldByName(fieldName)
+			} else if currentObj.Kind() == reflect.Map {
+				mapKey := reflect.ValueOf(match[1])
+				if value := currentObj.MapIndex(mapKey); value.IsValid() {
+					currentObj = value
+				} else {
+					return "" // Key does not exist in map
+				}
+			} else {
+				return "" // Not a struct or map, cannot proceed
+			}
+		} else if match[2] != "" { // Array index
+			index, _ := strconv.Atoi(match[2])
+			if currentObj.Kind() == reflect.Slice || currentObj.Kind() == reflect.Array {
+				if index < currentObj.Len() {
+					currentObj = currentObj.Index(index)
+				} else {
+					return "" // Index out of bounds
+				}
+			} else {
+				return "" // Not an array or slice
+			}
+		}
+	}
+
+	// Convert the final value to a string
+	if currentObj.IsValid() && currentObj.CanInterface() {
+		return fmt.Sprintf("%v", currentObj.Interface())
+	}
+
+	return ""
+}
+
+// AssignValues attempts to set the supplied values onto the supplied struct by using the ky on the values as a JSON path for the struct
+func AssignValues(obj interface{}, values map[string]string) (error, bool) {
 	tagToName := getJSONTagToFieldNameMap(obj)
 	anyFieldSet := false
 	var err error
@@ -134,13 +200,13 @@ func assignValues(obj interface{}, values map[string]string) (error, bool) {
 					nestedField.Set(newStruct)
 				}
 				// Recursively assign values to the nested struct
-				err, anyFieldSet = assignValues(nestedField.Interface(), map[string]string{strings.Join(keys[1:], "."): value})
+				err, anyFieldSet = AssignValues(nestedField.Interface(), map[string]string{strings.Join(keys[1:], "."): value})
 				if err != nil {
 					return err, anyFieldSet
 				}
 			} else if nestedField.Kind() == reflect.Struct {
 				// Handle non-pointer nested structs
-				err, anyFieldSet = assignValues(nestedField.Addr().Interface(), map[string]string{strings.Join(keys[1:], "."): value})
+				err, anyFieldSet = AssignValues(nestedField.Addr().Interface(), map[string]string{strings.Join(keys[1:], "."): value})
 				if err != nil {
 					return err, anyFieldSet
 				}
@@ -161,61 +227,4 @@ func assignValues(obj interface{}, values map[string]string) (error, bool) {
 		}
 	}
 	return nil, anyFieldSet
-}
-
-// getValue returns the string representation of the value of a field in a struct
-// identified by a json tag path, or an empty string if the field does not exist.
-func getFieldNameFromJSONTag(objType reflect.Type, jsonTag string) (string, bool) {
-	for i := 0; i < objType.NumField(); i++ {
-		field := objType.Field(i)
-		tag := field.Tag.Get("json")
-		if tag == jsonTag {
-			return field.Name, true
-		}
-	}
-	return "", false
-}
-
-func getValue(obj interface{}, jsonTagPath string) string {
-	// Regular expression to match field names and array indices
-	re := regexp.MustCompile(`(\w+)|\[(\d+)\]`)
-	matches := re.FindAllStringSubmatch(jsonTagPath, -1)
-
-	currentObj := reflect.ValueOf(obj)
-
-	for _, match := range matches {
-		// Match can be either a field name or an index
-		if match[1] != "" { // Field name
-			if currentObj.Kind() == reflect.Ptr {
-				currentObj = currentObj.Elem()
-			}
-			if currentObj.Kind() != reflect.Struct {
-				return "" // Not a struct, cannot proceed
-			}
-			tagToName := getJSONTagToFieldNameMap(currentObj.Interface())
-			fieldName, exists := tagToName[match[1]]
-			if !exists {
-				return "" // Field does not exist
-			}
-			currentObj = currentObj.FieldByName(fieldName)
-		} else if match[2] != "" { // Array index
-			index, _ := strconv.Atoi(match[2])
-			if currentObj.Kind() == reflect.Slice || currentObj.Kind() == reflect.Array {
-				if index < currentObj.Len() {
-					currentObj = currentObj.Index(index)
-				} else {
-					return "" // Index out of bounds
-				}
-			} else {
-				return "" // Not an array or slice
-			}
-		}
-	}
-
-	// Convert the final value to a string
-	if currentObj.IsValid() && currentObj.CanInterface() {
-		return fmt.Sprintf("%v", currentObj.Interface())
-	}
-
-	return ""
 }
