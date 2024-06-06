@@ -250,9 +250,12 @@ func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID
 		if err != nil {
 			return err
 		}
-		modernProjectID := projectSuccessorMap[projectID]
-		keyToProjectIDAndValue[k] = []interface{}{modernProjectID, s[1]}
-		projectIDs = append(projectIDs, modernProjectID)
+
+		if modernProjectID := projectSuccessorMap[projectID]; modernProjectID != uuid.Nil {
+			projectID = modernProjectID
+		}
+		keyToProjectIDAndValue[k] = []interface{}{projectID, s[1]}
+		projectIDs = append(projectIDs, projectID)
 	}
 
 	projects, err := c.zeet.GetProjectsByID(ctx, projectIDs)
