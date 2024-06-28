@@ -21,6 +21,7 @@ type Repo struct {
 	SubGroupName         string            `json:"subGroupName"`
 	ProductionDeployment Deployment        `json:"deployment"`
 	DatabaseEnvs         map[string]string `json:"databaseEnvs"`
+	Envs                 map[string]string `json:"envs"`
 }
 
 func (c *Client) GetRepoByID(ctx context.Context, id uuid.UUID) (*Repo, error) {
@@ -49,6 +50,10 @@ query getRepo($id: UUID) {
 			name
 			value
 		}
+		envs {
+			name
+			value
+		}
   }
 }
 `
@@ -60,6 +65,11 @@ query getRepo($id: UUID) {
 	dbEnvs := make(map[string]string, len(res.Repo.DatabaseEnvs))
 	for _, e := range res.Repo.DatabaseEnvs {
 		dbEnvs[e.Name] = e.Value
+	}
+
+	envs := make(map[string]string, len(res.Repo.Envs))
+	for _, e := range res.Repo.Envs {
+		envs[e.Name] = e.Value
 	}
 
 	out = &Repo{
@@ -74,6 +84,7 @@ query getRepo($id: UUID) {
 			Status:    res.Repo.ProductionDeployment.Status,
 		},
 		DatabaseEnvs: dbEnvs,
+		Envs:         envs,
 	}
 
 	return out, err
