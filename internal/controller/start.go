@@ -143,7 +143,19 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, proje
 
 		if len(envsToSet) > 0 {
 			fmt.Printf("Applying env overrides to %s: %v\n", newProjectID, envsToSet)
-			if err = c.zeet.UpdateEnvs(ctx, newProjectID, envsToSet); err != nil {
+			finalEnvs := make(map[string]string)
+			if existingRepo, err := c.zeet.GetRepoByID(ctx, oldProjectID); err != nil {
+				fmt.Printf("Failed to fetch existing env vars for project %s, non-overriden env vars may be dropped: %s\n", oldProjectID, err)
+			} else {
+				//Because we're setting all the envs, we need to ensure we keep any existing env vars or else the override will wipe all non-override values
+				finalEnvs = existingRepo.Envs
+			}
+
+			for k := range envsToSet {
+				finalEnvs[k] = envsToSet[k]
+			}
+
+			if err = c.zeet.UpdateEnvs(ctx, newProjectID, finalEnvs); err != nil {
 				return errors.WithStack(errors.Wrap(err, "could not apply env var override"))
 			}
 		}

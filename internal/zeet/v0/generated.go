@@ -1135,6 +1135,7 @@ type getRepoRepo struct {
 	ProjectEnvironment   *getRepoRepoProjectEnvironment   `json:"projectEnvironment"`
 	ProductionDeployment *getRepoRepoProductionDeployment `json:"productionDeployment"`
 	DatabaseEnvs         []getRepoRepoDatabaseEnvsEnvVar  `json:"databaseEnvs"`
+	Envs                 []getRepoRepoEnvsEnvVar          `json:"envs"`
 }
 
 // GetId returns getRepoRepo.Id, and is useful for accessing the field via an interface.
@@ -1162,6 +1163,9 @@ func (v *getRepoRepo) GetProductionDeployment() *getRepoRepoProductionDeployment
 // GetDatabaseEnvs returns getRepoRepo.DatabaseEnvs, and is useful for accessing the field via an interface.
 func (v *getRepoRepo) GetDatabaseEnvs() []getRepoRepoDatabaseEnvsEnvVar { return v.DatabaseEnvs }
 
+// GetEnvs returns getRepoRepo.Envs, and is useful for accessing the field via an interface.
+func (v *getRepoRepo) GetEnvs() []getRepoRepoEnvsEnvVar { return v.Envs }
+
 // getRepoRepoDatabaseEnvsEnvVar includes the requested fields of the GraphQL type EnvVar.
 type getRepoRepoDatabaseEnvsEnvVar struct {
 	Name  string `json:"name"`
@@ -1173,6 +1177,18 @@ func (v *getRepoRepoDatabaseEnvsEnvVar) GetName() string { return v.Name }
 
 // GetValue returns getRepoRepoDatabaseEnvsEnvVar.Value, and is useful for accessing the field via an interface.
 func (v *getRepoRepoDatabaseEnvsEnvVar) GetValue() string { return v.Value }
+
+// getRepoRepoEnvsEnvVar includes the requested fields of the GraphQL type EnvVar.
+type getRepoRepoEnvsEnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// GetName returns getRepoRepoEnvsEnvVar.Name, and is useful for accessing the field via an interface.
+func (v *getRepoRepoEnvsEnvVar) GetName() string { return v.Name }
+
+// GetValue returns getRepoRepoEnvsEnvVar.Value, and is useful for accessing the field via an interface.
+func (v *getRepoRepoEnvsEnvVar) GetValue() string { return v.Value }
 
 // getRepoRepoOwnerUser includes the requested fields of the GraphQL type User.
 type getRepoRepoOwnerUser struct {
@@ -1458,6 +1474,10 @@ query getRepo ($id: UUID) {
 			status
 		}
 		databaseEnvs {
+			name
+			value
+		}
+		envs {
 			name
 			value
 		}
