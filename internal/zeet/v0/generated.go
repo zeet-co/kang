@@ -896,6 +896,14 @@ func (v *UpdateProjectInput) GetPipelineClusterID() *uuid.UUID { return v.Pipeli
 // GetDeployTarget returns UpdateProjectInput.DeployTarget, and is useful for accessing the field via an interface.
 func (v *UpdateProjectInput) GetDeployTarget() *ProjectDeployInput { return v.DeployTarget }
 
+// __buildRepoInput is used internally by genqlient
+type __buildRepoInput struct {
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns __buildRepoInput.Id, and is useful for accessing the field via an interface.
+func (v *__buildRepoInput) GetId() uuid.UUID { return v.Id }
+
 // __deleteRepoInput is used internally by genqlient
 type __deleteRepoInput struct {
 	Id uuid.UUID `json:"id"`
@@ -983,6 +991,23 @@ type __updateProjectInput struct {
 
 // GetInput returns __updateProjectInput.Input, and is useful for accessing the field via an interface.
 func (v *__updateProjectInput) GetInput() UpdateProjectInput { return v.Input }
+
+// buildRepoBuildRepo includes the requested fields of the GraphQL type Repo.
+type buildRepoBuildRepo struct {
+	// - v0.RepoID
+	Id uuid.UUID `json:"id"`
+}
+
+// GetId returns buildRepoBuildRepo.Id, and is useful for accessing the field via an interface.
+func (v *buildRepoBuildRepo) GetId() uuid.UUID { return v.Id }
+
+// buildRepoResponse is returned by buildRepo on success.
+type buildRepoResponse struct {
+	BuildRepo buildRepoBuildRepo `json:"buildRepo"`
+}
+
+// GetBuildRepo returns buildRepoResponse.BuildRepo, and is useful for accessing the field via an interface.
+func (v *buildRepoResponse) GetBuildRepo() buildRepoBuildRepo { return v.BuildRepo }
 
 // deleteRepoResponse is returned by deleteRepo on success.
 type deleteRepoResponse struct {
@@ -1293,6 +1318,41 @@ type updateProjectUpdateProjectRepo struct {
 
 // GetId returns updateProjectUpdateProjectRepo.Id, and is useful for accessing the field via an interface.
 func (v *updateProjectUpdateProjectRepo) GetId() uuid.UUID { return v.Id }
+
+// The query or mutation executed by buildRepo.
+const buildRepo_Operation = `
+mutation buildRepo ($id: ID!) {
+	buildRepo(id: $id, noCache: false) {
+		id
+	}
+}
+`
+
+func buildRepo(
+	ctx context.Context,
+	client graphql.Client,
+	id uuid.UUID,
+) (*buildRepoResponse, error) {
+	req := &graphql.Request{
+		OpName: "buildRepo",
+		Query:  buildRepo_Operation,
+		Variables: &__buildRepoInput{
+			Id: id,
+		},
+	}
+	var err error
+
+	var data buildRepoResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
 
 // The query or mutation executed by deleteRepo.
 const deleteRepo_Operation = `

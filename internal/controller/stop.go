@@ -42,17 +42,15 @@ func (c *Controller) StopEnvironment(ctx context.Context, envName string, teamID
 		return nil
 	}
 
-	ids, err := c.getProjectsInSubGroup(ctx, group.Name, sg)
+	ids, err := c.getProjectsInSubGroup(group.Name, sg)
 	if err != nil {
 		return err
 	}
 
-	if ids != nil {
-		for _, id := range ids {
-			fmt.Printf("Deleting project %s\n", id)
-			if err := c.zeet.DeleteProject(ctx, id); err != nil {
-				errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
-			}
+	for _, id := range ids {
+		fmt.Printf("Deleting project %s\n", id)
+		if err := c.zeet.DeleteProject(ctx, id); err != nil {
+			errs = append(errs, fmt.Errorf(fmt.Sprintf("failed to delete %s", err)))
 		}
 
 	}
@@ -66,7 +64,7 @@ func (c *Controller) StopEnvironment(ctx context.Context, envName string, teamID
 	return nil
 }
 
-func (c *Controller) getProjectsInSubGroup(ctx context.Context, groupName string, sg *v0.SubGroup) ([]uuid.UUID, error) {
+func (c *Controller) getProjectsInSubGroup(groupName string, sg *v0.SubGroup) ([]uuid.UUID, error) {
 
 	fmt.Printf("Found %d projects in %s/%s\n", len(sg.Projects), groupName, sg.Name)
 
