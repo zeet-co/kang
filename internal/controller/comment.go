@@ -24,7 +24,7 @@ func (c *Controller) CommentGithub(ctx context.Context, prNumber int, repo, toke
 
 	sg := findSubGroup(group, envName)
 
-	projectIDs, err := c.getProjectsInSubGroup(ctx, c.groupName, sg)
+	projectIDs, err := c.getProjectsInSubGroup(c.groupName, sg)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func newGitHubAPIClient(ctx context.Context, token string, apiURL string, tlsCon
 func splitGitHubProject(project string) (string, string, error) {
 	parts := strings.SplitN(project, "/", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Invalid GitHub repository name: %s, expecting owner/repo", project)
+		return "", "", fmt.Errorf("invalid GitHub repository name: %s, expecting owner/repo", project)
 	}
 	return parts[0], parts[1], nil
 }

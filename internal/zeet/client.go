@@ -43,7 +43,7 @@ func (c *Client) GetGroup(ctx context.Context, group string) (*v0.GetSubGroupsFo
 
 func (c *Client) EnsureGroupsExist(ctx context.Context, teamName, group, subgroup string, teamID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
 
-	groupID := uuid.Nil
+	var groupID uuid.UUID
 	subGroupID := uuid.Nil
 
 	resp, err := c.GetGroup(ctx, fmt.Sprintf("%s/%s", teamName, group))
@@ -159,4 +159,8 @@ func (c *Client) GetTeamName(ctx context.Context, teamID uuid.UUID) (*string, er
 
 func (c *Client) DeleteSubGroup(ctx context.Context, subGroupID uuid.UUID) error {
 	return c.v1Client.DeleteSubGroup(ctx, subGroupID)
+}
+
+func (c *Client) RebuildProject(ctx context.Context, projectID uuid.UUID) error {
+	return c.v0Client.RebuildProject(ctx, projectID)
 }

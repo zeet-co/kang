@@ -76,14 +76,16 @@ func (c *Controller) StartEnvironment(opts StartEnvironmentOpts) error {
 	}
 
 	for i, p := range projects {
-
 		newName := fmt.Sprintf("%s-%s", p.Name, opts.EnvName)
 		if opts.Overrides[p.ID] != nil {
 			fmt.Printf("Found overrides applying to %s: parsing now\n", newName)
 			override := opts.Overrides[p.ID]
 			errs[i] = c.applyOverrides(ctx, opts.TeamID, projectSuccessorMap, p.ID, override)
 		}
-		fmt.Printf("Done with project %s!\n", newName)
+
+		if errs[i] == nil {
+			fmt.Printf("Done with project %s!\n", newName)
+		}
 	}
 
 	return stdErrors.Join(errs...)
@@ -108,8 +110,9 @@ func overrideToUpdateInput(pID uuid.UUID, overrides map[string]string) (*v0.Upda
 }
 
 func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, projectSuccessorMap map[uuid.UUID]uuid.UUID, oldProjectID uuid.UUID, override map[string]string) error {
+	var changed bool
 	newProjectID := projectSuccessorMap[oldProjectID]
-	fmt.Printf("applying overrides: %s\n", override)
+
 	updateInput, err := overrideToUpdateInput(newProjectID, override)
 	if err != nil {
 		return errors.WithStack(errors.Wrap(err, fmt.Sprintf("could not parse override %s", override)))
@@ -121,11 +124,11 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, proje
 		if err = c.zeet.UpdateProject(ctx, newProjectID, updateInput); err != nil {
 			return errors.WithStack(errors.Wrap(err, "could not apply config overrides"))
 		}
+		changed = true
 	}
 
 	envs, envPresent := checkOverridesForEnvs(override)
 	if envPresent {
-
 		envsToSet := map[string]string{}
 		symbolicEnvs := map[string]string{}
 
@@ -137,7 +140,7 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, proje
 			}
 		}
 
-		if err = c.addSymbolicEnvs(ctx, newProjectID, envsToSet, symbolicEnvs, projectSuccessorMap); err != nil {
+		if err = c.addSymbolicEnvs(ctx, envsToSet, symbolicEnvs, projectSuccessorMap); err != nil {
 			fmt.Printf("Failed to resolve references to other projects' outputs: %s\n", err)
 		}
 
@@ -158,6 +161,7 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, proje
 			if err = c.zeet.UpdateEnvs(ctx, newProjectID, finalEnvs); err != nil {
 				return errors.WithStack(errors.Wrap(err, "could not apply env var override"))
 			}
+			changed = true
 		}
 	}
 
@@ -190,6 +194,14 @@ func (c *Controller) applyOverrides(ctx context.Context, teamID uuid.UUID, proje
 
 		if err = c.zeet.UpdateProject(ctx, newProjectID, updateObject); err != nil {
 			return errors.WithStack(errors.Wrap(err, "could not apply cluster overrides"))
+		}
+		changed = true
+	}
+
+	if changed {
+		fmt.Printf("Project %s had config changes that may not be reflected in most recent deployments. Triggering re-build with cache\n", newProjectID)
+		if err = c.zeet.RebuildProject(ctx, newProjectID); err != nil {
+			return errors.WithStack(errors.Wrap(err, "could not trigger rebuild"))
 		}
 	}
 
@@ -236,7 +248,7 @@ func checkOverridesForEnvs(override map[string]string) ([]envOverride, bool) {
 	return out, isEnvPresent
 }
 
-//isSymbolic checks if the format of the env
+// isSymbolic checks if the format of the env
 func isSymbolic(v string) bool {
 	split := strings.Split(v, ":")
 
@@ -252,7 +264,7 @@ func isSymbolic(v string) bool {
 
 }
 
-func (c *Controller) addSymbolicEnvs(ctx context.Context, newProjectID uuid.UUID, out, symbolicEnvs map[string]string, projectSuccessorMap map[uuid.UUID]uuid.UUID) error {
+func (c *Controller) addSymbolicEnvs(ctx context.Context, out, symbolicEnvs map[string]string, projectSuccessorMap map[uuid.UUID]uuid.UUID) error {
 	projectIDs := []uuid.UUID{}
 	keyToProjectIDAndValue := map[string][]interface{}{}
 
